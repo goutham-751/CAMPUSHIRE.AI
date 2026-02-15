@@ -1,0 +1,112 @@
+.topnav {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-sticky);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 var(--space-8);
+    height: var(--navbar-height);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.topnav__title {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.topnav__right {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.topnav__search {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.topnav__search-icon {
+    position: absolute;
+    left: 12px;
+    color: var(--color-text-tertiary);
+    pointer-events: none;
+}
+
+.topnav__search-input {
+    width: 220px;
+    padding: 8px 12px 8px 36px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    background: var(--color-bg-tertiary);
+    color: var(--color-text-primary);
+    font-size: 0.8125rem;
+    outline: none;
+    transition: all var(--transition-fast);
+}
+
+.topnav__search-input:focus {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px var(--color-accent-glow);
+    width: 280px;
+}
+
+.topnav__icon-btn {
+    position: relative;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-secondary);
+    color: var(--color-text-secondary);
+    transition: all var(--transition-fast);
+}
+
+.topnav__icon-btn:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+    background: var(--color-accent-light);
+}
+
+.topnav__badge {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 16px;
+    height: 16px;
+    background: var(--color-error);
+    color: #fff;
+    border-radius: var(--radius-full);
+    font-size: 0.625rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.topnav__avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-full);
+    background: var(--gradient-primary);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.875rem;
+}
+
+@media (max-width: 768px) {
+    .topnav__search {
+        display: none;
+    }
+
+    .topnav {
+        padding: 0 var(--space-4);
+    }
+}

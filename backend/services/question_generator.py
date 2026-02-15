@@ -2,7 +2,7 @@ import os
 import json
 import random
 from typing import Dict, List, Optional, Any
-import google.generativeai as genai
+from google import genai
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -16,8 +16,8 @@ class QuestionGenerator:
         if not self.api_key:
             raise ValueError("GEMINI_API_KEY environment variable not set")
 
-        genai.configure(api_key=self.api_key)
-        self.model = genai.GenerativeModel("gemini-2.0-flash")
+        self.client = genai.Client(api_key=self.api_key)
+        self.model_name = "gemini-2.0-flash"
 
         self.question_weights = {
             "technical": 40,
@@ -87,7 +87,9 @@ class QuestionGenerator:
                 industry=industry,
             )
 
-            response = self.model.generate_content(prompt)
+            response = await self.client.aio.models.generate_content(
+                model=self.model_name, contents=prompt
+            )
             questions = self._parse_questions_response(response.text)
             balanced_questions = self._balance_questions(questions, num_questions)
 
@@ -128,7 +130,9 @@ class QuestionGenerator:
                 question=question,
                 answer=answer,
             )
-            response = self.model.generate_content(prompt)
+            response = await self.client.aio.models.generate_content(
+                model=self.model_name, contents=prompt
+            )
             result = self._parse_json_response(response.text)
             return {"success": True, **result}
         except Exception as e:

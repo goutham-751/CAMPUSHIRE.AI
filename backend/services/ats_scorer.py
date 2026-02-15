@@ -1,7 +1,7 @@
 import os
 import json
 from typing import Dict, List, Optional, Any
-import google.generativeai as genai
+from google import genai
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -15,8 +15,8 @@ class AtsScorer:
         if not self.api_key:
             raise ValueError("GEMINI_API_KEY environment variable not set")
 
-        genai.configure(api_key=self.api_key)
-        self.model = genai.GenerativeModel("gemini-2.0-flash")
+        self.client = genai.Client(api_key=self.api_key)
+        self.model_name = "gemini-2.0-flash"
 
         self.criteria_weights = {
             "skills_match": 30,
@@ -88,7 +88,9 @@ class AtsScorer:
                 resume_content=resume_content,
             )
 
-            response = self.model.generate_content(prompt)
+            response = await self.client.aio.models.generate_content(
+                model=self.model_name, contents=prompt
+            )
             result = self._parse_ats_response(response.text)
 
             if "scores" in result:

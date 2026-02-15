@@ -1,7 +1,7 @@
 import os
 from typing import Dict, Any, List, Optional
 from pathlib import Path
-import google.generativeai as genai
+from google import genai
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -15,8 +15,8 @@ class FeedbackGenerator:
         if not self.api_key:
             raise ValueError("GEMINI_API_KEY environment variable not set")
 
-        genai.configure(api_key=self.api_key)
-        self.model = genai.GenerativeModel("gemini-2.0-flash")
+        self.client = genai.Client(api_key=self.api_key)
+        self.model_name = "gemini-2.0-flash"
 
         self.feedback_template = """
         You are an expert career coach and hiring manager with 15+ years of experience in technical recruiting.
@@ -66,7 +66,9 @@ class FeedbackGenerator:
                 job_description=job_description,
             )
 
-            response = self.model.generate_content(prompt)
+            response = await self.client.aio.models.generate_content(
+                model=self.model_name, contents=prompt
+            )
             feedback = self._parse_feedback_response(response.text)
 
             return {

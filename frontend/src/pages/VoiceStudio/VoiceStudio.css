@@ -1,0 +1,562 @@
+.voice-page__desc {
+    color: var(--color-text-secondary);
+    margin-bottom: var(--space-6);
+}
+
+/* ── Tabs ─────────────────────────────────────────────────── */
+.voice-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    background: var(--color-bg-tertiary);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-6);
+    width: fit-content;
+}
+
+.voice-tabs__btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--color-text-secondary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.voice-tabs__btn:hover {
+    color: var(--color-text-primary);
+}
+
+.voice-tabs__btn.active {
+    background: var(--color-bg-primary);
+    color: var(--color-accent);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* ── Voice Tools Grid ─────────────────────────────────────── */
+.voice-page__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    gap: var(--space-6);
+    align-items: start;
+}
+
+.voice-page__card {
+    padding: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.voice-page__card-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--color-accent);
+}
+
+.voice-page__card-header h3 {
+    font-size: 1rem;
+    color: var(--color-text-primary);
+}
+
+.voice-page__audio {
+    margin-top: var(--space-2);
+}
+
+/* ── AI Interview — Setup ─────────────────────────────────── */
+.vi-setup {
+    max-width: 560px;
+}
+
+.vi-setup__card {
+    padding: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.vi-setup__desc {
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+}
+
+.vi-setup__q-count {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.vi-setup__q-count label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+}
+
+.vi-setup__q-btns {
+    display: flex;
+    gap: 8px;
+}
+
+.vi-setup__q-btn {
+    width: 42px;
+    height: 36px;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--color-text-secondary);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.vi-setup__q-btn:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+}
+
+.vi-setup__q-btn.active {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: white;
+}
+
+.vi-error {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--color-error);
+    font-size: 0.82rem;
+}
+
+/* ── AI Interview — Running ───────────────────────────────── */
+.vi-running {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    max-width: 680px;
+}
+
+/* Progress */
+.vi-progress {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.vi-progress__bar {
+    flex: 1;
+    height: 6px;
+    background: var(--color-bg-tertiary);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.vi-progress__fill {
+    height: 100%;
+    background: linear-gradient(90deg, #6366f1, #8b5cf6);
+    border-radius: 3px;
+}
+
+.vi-progress__text {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--color-text-tertiary);
+    white-space: nowrap;
+}
+
+/* Question Card */
+.vi-question-card {
+    padding: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.vi-question-card__header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.vi-question-card__num {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    background: var(--color-accent-light);
+    color: var(--color-accent);
+    font-weight: 800;
+    font-size: 0.85rem;
+}
+
+.vi-question-card__badges {
+    display: flex;
+    gap: 6px;
+    margin-left: auto;
+}
+
+.vi-question-card__text {
+    font-size: 1.05rem;
+    line-height: 1.6;
+    font-weight: 500;
+}
+
+/* Speaking animation */
+.vi-speaking {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(139, 92, 246, 0.08));
+    border-radius: var(--radius-md);
+    font-size: 0.82rem;
+    color: var(--color-accent);
+    font-weight: 500;
+}
+
+.vi-speaking__waves {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    height: 24px;
+}
+
+.vi-speaking__bar {
+    width: 3px;
+    background: var(--color-accent);
+    border-radius: 2px;
+}
+
+/* Recording */
+.vi-record {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+}
+
+.vi-record__active {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.vi-record__pulse {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #ef4444;
+}
+
+.vi-record__time {
+    font-size: 1.1rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: #ef4444;
+    min-width: 48px;
+}
+
+/* Evaluating */
+.vi-evaluating {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    background: var(--color-bg-tertiary);
+    border-radius: var(--radius-md);
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+}
+
+/* Transcript */
+.vi-transcript {
+    padding: var(--space-3) var(--space-4);
+    background: var(--color-bg-tertiary);
+    border-radius: var(--radius-md);
+    border-left: 3px solid var(--color-accent);
+}
+
+.vi-transcript h5 {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-text-tertiary);
+    margin-bottom: 6px;
+}
+
+.vi-transcript p {
+    font-size: 0.85rem;
+    font-style: italic;
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+}
+
+/* Evaluation Result */
+.vi-eval {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    border-top: 1px solid var(--color-border);
+    padding-top: var(--space-4);
+}
+
+.vi-eval__top {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+}
+
+.vi-eval__label {
+    display: block;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-text-tertiary);
+}
+
+.vi-eval__verdict {
+    display: block;
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.vi-eval__section {
+    margin-bottom: var(--space-2);
+}
+
+.vi-eval__section h5 {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.vi-eval__section ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.vi-eval__section ul li {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 4px 0;
+    font-size: 0.82rem;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+}
+
+.vi-eval__section ul li svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.vi-eval__sample {
+    padding: var(--space-3);
+    background: var(--color-bg-tertiary);
+    border-radius: var(--radius-md);
+    border-left: 3px solid var(--color-accent);
+    font-size: 0.82rem;
+    color: var(--color-text-secondary);
+    line-height: 1.7;
+    font-style: italic;
+}
+
+/* Score ring */
+.vi-score-ring {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.vi-score-ring__val {
+    position: absolute;
+    font-weight: 800;
+    font-family: var(--font-primary);
+}
+
+/* ── AI Interview — Summary ───────────────────────────────── */
+.vi-summary {
+    max-width: 680px;
+}
+
+.vi-summary__main {
+    padding: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+.vi-summary__main h3 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.1rem;
+}
+
+.vi-summary__score-area {
+    display: flex;
+    align-items: center;
+    gap: var(--space-5);
+    padding: var(--space-4);
+    background: var(--color-bg-tertiary);
+    border-radius: var(--radius-md);
+}
+
+.vi-summary__avg-label {
+    display: block;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-text-tertiary);
+}
+
+.vi-summary__avg-text {
+    display: block;
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.vi-summary__count {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--color-text-tertiary);
+    margin-top: 2px;
+}
+
+.vi-summary__questions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.vi-summary__q-item {
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-tertiary);
+}
+
+.vi-summary__q-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.vi-summary__q-num {
+    font-weight: 800;
+    font-size: 0.78rem;
+    color: var(--color-accent);
+    flex-shrink: 0;
+}
+
+.vi-summary__q-text {
+    flex: 1;
+    font-size: 0.85rem;
+    font-weight: 500;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.vi-summary__q-score {
+    font-weight: 800;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+.vi-summary__q-answer {
+    font-size: 0.78rem;
+    color: var(--color-text-tertiary);
+    font-style: italic;
+    margin-top: 4px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.vi-summary__q-skipped {
+    font-size: 0.78rem;
+    color: var(--color-text-tertiary);
+    font-style: italic;
+    margin-top: 4px;
+}
+
+/* ── Voice list (kept from original) ──────────────────────── */
+.voice-page__voices-card {
+    grid-column: 1 / -1;
+}
+
+.voice-page__voices-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.voice-page__voice-group h4 {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--color-text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: var(--space-2);
+}
+
+.voice-page__voice-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+
+.voice-page__voice-tag {
+    padding: 4px 12px;
+    border-radius: var(--radius-full);
+    background: var(--color-bg-tertiary);
+    border: 1px solid var(--color-border);
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.voice-page__voice-tag:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+}
+
+.voice-page__voice-tag.active {
+    background: var(--color-accent-light);
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+    font-weight: 600;
+}
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .voice-page__grid {
+        grid-template-columns: 1fr;
+    }
+
+    .vi-running,
+    .vi-setup,
+    .vi-summary {
+        max-width: 100%;
+    }
+}
