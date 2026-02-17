@@ -12,6 +12,10 @@
     border: 1px solid var(--color-border);
 }
 
+.card--default:hover {
+    border-color: rgba(201, 169, 98, 0.12);
+}
+
 .card--glass {
     background: var(--glass-bg);
     backdrop-filter: var(--backdrop-blur);
@@ -27,6 +31,13 @@
 
 .card--accent {
     background: var(--gradient-primary);
-    color: #fff;
+    color: #1a1a1a;
     border: none;
+}
+
+.card--premium {
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-top: 2px solid var(--color-accent);
+    box-shadow: var(--shadow-glow);
 }

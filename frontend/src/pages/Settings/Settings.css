@@ -1,3 +1,7 @@
+/* ═══════════════════════════════════════════════════════════════
+   Settings — CRED-Inspired Premium Styles
+   ═══════════════════════════════════════════════════════════════ */
+
 .settings {
     max-width: 900px;
 }
@@ -49,10 +53,10 @@
     align-items: center;
     gap: var(--space-2);
     padding: var(--space-5) var(--space-4);
-    border: 2px solid var(--color-border);
+    border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
     background: var(--color-bg-tertiary);
-    color: var(--color-text-secondary);
+    color: var(--color-text-tertiary);
     font-size: 0.8125rem;
     font-weight: 600;
     transition: all var(--transition-fast);
@@ -81,7 +85,7 @@
     justify-content: space-between;
     padding: var(--space-3) 0;
     cursor: pointer;
-    border-bottom: 1px solid var(--color-border-light);
+    border-bottom: 1px solid var(--color-border);
 }
 
 .settings-toggle:last-of-type {
@@ -108,14 +112,16 @@
     width: 44px;
     height: 24px;
     border-radius: var(--radius-full);
-    background: var(--color-border);
+    background: var(--color-bg-elevated);
+    border: 1px solid var(--color-border);
     padding: 2px;
     flex-shrink: 0;
-    transition: background var(--transition-fast);
+    transition: all var(--transition-fast);
 }
 
 .settings-toggle__switch.on {
     background: var(--color-accent);
+    border-color: var(--color-accent);
 }
 
 .settings-toggle__knob {
@@ -140,14 +146,14 @@
 }
 
 .settings__select {
-    padding: 10px 14px;
+    padding: 11px 16px;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
     background: var(--color-bg-tertiary);
     color: var(--color-text-primary);
     font-size: 0.875rem;
     outline: none;
-    transition: border-color var(--transition-fast);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .settings__select:focus {

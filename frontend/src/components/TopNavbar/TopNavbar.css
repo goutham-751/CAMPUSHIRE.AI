@@ -7,12 +7,14 @@
     justify-content: space-between;
     padding: 0 var(--space-8);
     height: var(--navbar-height);
+    background: var(--color-bg-primary);
     border-bottom: 1px solid var(--color-border);
 }
 
 .topnav__title {
     font-size: 1.25rem;
     font-weight: 700;
+    letter-spacing: -0.02em;
 }
 
 .topnav__right {
@@ -29,14 +31,14 @@
 
 .topnav__search-icon {
     position: absolute;
-    left: 12px;
+    left: 14px;
     color: var(--color-text-tertiary);
     pointer-events: none;
 }
 
 .topnav__search-input {
     width: 220px;
-    padding: 8px 12px 8px 36px;
+    padding: 9px 14px 9px 38px;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-full);
     background: var(--color-bg-tertiary);
@@ -44,6 +46,10 @@
     font-size: 0.8125rem;
     outline: none;
     transition: all var(--transition-fast);
+}
+
+.topnav__search-input::placeholder {
+    color: var(--color-text-tertiary);
 }
 
 .topnav__search-input:focus {
@@ -60,28 +66,27 @@
     align-items: center;
     justify-content: center;
     border-radius: var(--radius-full);
-    border: 1px solid var(--color-border);
-    background: var(--color-bg-secondary);
-    color: var(--color-text-secondary);
+    border: none;
+    background: transparent;
+    color: var(--color-text-tertiary);
     transition: all var(--transition-fast);
 }
 
 .topnav__icon-btn:hover {
-    border-color: var(--color-accent);
     color: var(--color-accent);
     background: var(--color-accent-light);
 }
 
 .topnav__badge {
     position: absolute;
-    top: -2px;
-    right: -2px;
-    width: 16px;
-    height: 16px;
-    background: var(--color-error);
-    color: #fff;
+    top: 2px;
+    right: 2px;
+    width: 14px;
+    height: 14px;
+    background: var(--color-accent);
+    color: #1a1a1a;
     border-radius: var(--radius-full);
-    font-size: 0.625rem;
+    font-size: 0.6rem;
     font-weight: 700;
     display: flex;
     align-items: center;
@@ -92,13 +97,14 @@
     width: 36px;
     height: 36px;
     border-radius: var(--radius-full);
-    background: var(--gradient-primary);
-    color: #fff;
+    background: var(--color-bg-tertiary);
+    color: var(--color-accent);
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 700;
     font-size: 0.875rem;
+    border: 2px solid var(--color-accent);
 }
 
 @media (max-width: 768px) {

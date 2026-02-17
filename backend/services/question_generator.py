@@ -5,6 +5,8 @@ from typing import Dict, List, Optional, Any
 from google import genai
 from dotenv import load_dotenv
 
+from backend.config import settings
+
 load_dotenv()
 
 
@@ -12,12 +14,12 @@ class QuestionGenerator:
     """Generates tailored interview questions using Gemini AI."""
 
     def __init__(self):
-        self.api_key = os.getenv("GEMINI_API_KEY")
+        self.api_key = settings.GEMINI_API_KEY
         if not self.api_key:
             raise ValueError("GEMINI_API_KEY environment variable not set")
 
         self.client = genai.Client(api_key=self.api_key)
-        self.model_name = "gemini-2.0-flash"
+        self.model_name = settings.GEMINI_MODEL
 
         self.question_weights = {
             "technical": 40,
@@ -90,7 +92,21 @@ class QuestionGenerator:
             response = await self.client.aio.models.generate_content(
                 model=self.model_name, contents=prompt
             )
-            questions = self._parse_questions_response(response.text)
+            
+            # Handle response text extraction
+            response_text = ""
+            if hasattr(response, 'text') and response.text:
+                response_text = response.text
+            elif hasattr(response, 'candidates') and response.candidates:
+                if hasattr(response.candidates[0], 'content') and response.candidates[0].content:
+                    parts = getattr(response.candidates[0].content, 'parts', None)
+                    if parts is not None:
+                        response_text = "".join(part.text for part in parts if hasattr(part, 'text') and part.text)
+            
+            if not response_text:
+                raise ValueError("No text content in API response")
+            
+            questions = self._parse_questions_response(response_text)
             balanced_questions = self._balance_questions(questions, num_questions)
 
             # Build metadata
@@ -133,7 +149,21 @@ class QuestionGenerator:
             response = await self.client.aio.models.generate_content(
                 model=self.model_name, contents=prompt
             )
-            result = self._parse_json_response(response.text)
+            
+            # Handle response text extraction
+            response_text = ""
+            if hasattr(response, 'text') and response.text:
+                response_text = response.text
+            elif hasattr(response, 'candidates') and response.candidates:
+                if hasattr(response.candidates[0], 'content') and response.candidates[0].content:
+                    parts = getattr(response.candidates[0].content, 'parts', None)
+                    if parts is not None:
+                        response_text = "".join(part.text for part in parts if hasattr(part, 'text') and part.text)
+            
+            if not response_text:
+                raise ValueError("No text content in API response")
+            
+            result = self._parse_json_response(response_text)
             return {"success": True, **result}
         except Exception as e:
             return {"success": False, "error": str(e)}

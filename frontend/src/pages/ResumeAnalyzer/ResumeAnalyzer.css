@@ -1,6 +1,11 @@
+/* ═══════════════════════════════════════════════════════════════
+   Resume Analyzer — CRED-Inspired Premium Styles
+   ═══════════════════════════════════════════════════════════════ */
+
 .resume-page__desc {
     color: var(--color-text-secondary);
     margin-bottom: var(--space-6);
+    font-size: 0.9rem;
 }
 
 .resume-page__grid {
@@ -16,11 +21,12 @@
     align-items: center;
     gap: var(--space-3);
     padding: var(--space-10);
-    border: 2px dashed var(--color-border);
+    border: 1.5px dashed rgba(255, 255, 255, 0.08);
     border-radius: var(--radius-lg);
     cursor: pointer;
     text-align: center;
-    transition: all var(--transition-fast);
+    transition: all var(--transition-base);
+    background: var(--color-bg-secondary);
 }
 
 .resume-page__dropzone:hover {
@@ -31,11 +37,12 @@
 .resume-page__dropzone.has-file {
     border-color: var(--color-success);
     border-style: solid;
-    background: rgba(16, 185, 129, 0.05);
+    background: rgba(45, 212, 160, 0.04);
 }
 
 .resume-page__dropzone strong {
     font-size: 1rem;
+    color: var(--color-text-primary);
 }
 
 .resume-page__dropzone span {
@@ -57,7 +64,7 @@
 
 .resume-page__input,
 .resume-page__textarea {
-    padding: 10px 14px;
+    padding: 11px 16px;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
     background: var(--color-bg-tertiary);
@@ -65,8 +72,13 @@
     font-size: 0.875rem;
     font-family: var(--font-body);
     outline: none;
-    transition: border-color var(--transition-fast);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
     resize: vertical;
+}
+
+.resume-page__input::placeholder,
+.resume-page__textarea::placeholder {
+    color: var(--color-text-tertiary);
 }
 
 .resume-page__input:focus,
@@ -150,6 +162,7 @@
     font-weight: 800;
     font-family: var(--font-primary);
     line-height: 1;
+    color: var(--color-accent);
 }
 
 .score-gauge__label {
@@ -161,13 +174,13 @@
 
 /* ── Category Bar ────────────────────────────────────────── */
 .cat-bar {
-    margin-bottom: 10px;
+    margin-bottom: 12px;
 }
 
 .cat-bar__header {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 4px;
+    margin-bottom: 6px;
 }
 
 .cat-bar__name {
@@ -178,10 +191,11 @@
 .cat-bar__score {
     font-size: 0.8rem;
     font-weight: 700;
+    color: var(--color-accent);
 }
 
 .cat-bar__track {
-    height: 8px;
+    height: 6px;
     border-radius: 99px;
     background: var(--color-bg-tertiary);
     overflow: hidden;
@@ -190,6 +204,7 @@
 .cat-bar__fill {
     height: 100%;
     border-radius: 99px;
+    background: var(--color-accent);
 }
 
 /* ── Tag List ────────────────────────────────────────────── */
@@ -203,11 +218,11 @@
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    padding: 4px 12px;
-    border: 1px solid;
+    padding: 5px 14px;
+    border: 1px solid var(--color-border);
     border-radius: 99px;
     font-size: 0.78rem;
-    color: var(--color-text-primary);
+    color: var(--color-text-secondary);
     background: var(--color-bg-tertiary);
 }
 
@@ -241,7 +256,7 @@
 
 .feedback-section__count {
     background: var(--color-bg-elevated);
-    padding: 1px 8px;
+    padding: 2px 10px;
     border-radius: 99px;
     font-size: 0.7rem;
     color: var(--color-text-tertiary);
@@ -296,8 +311,8 @@
     justify-content: center;
     font-size: 1.4rem;
     font-weight: 800;
-    background: linear-gradient(135deg, #6366f1, #a78bfa);
-    color: #fff;
+    background: var(--color-accent);
+    color: #1a1a1a;
     flex-shrink: 0;
 }
 
@@ -354,9 +369,9 @@
     border-radius: 99px;
     font-size: 0.78rem;
     font-weight: 500;
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(167, 139, 250, 0.1));
-    color: #a78bfa;
-    border: 1px solid rgba(99, 102, 241, 0.2);
+    background: var(--color-accent-light);
+    color: var(--color-accent);
+    border: 1px solid rgba(201, 169, 98, 0.15);
 }
 
 /* ── Experience Timeline ─────────────────────────────────── */
@@ -532,43 +547,23 @@
 }
 
 .score-result__list--success li::before {
-    background: #10b981;
+    background: var(--color-success);
 }
 
 .score-result__list--warning li::before {
-    background: #f59e0b;
+    background: var(--color-warning);
 }
 
 .score-result__list--accent li::before {
-    background: #6366f1;
+    background: var(--color-accent);
 }
 
 .score-result__list--error li::before {
-    background: #ef4444;
+    background: var(--color-error);
 }
 
 .score-result__list--info li::before {
-    background: #06b6d4;
-}
-
-.text-success {
-    color: #10b981;
-}
-
-.text-warning {
-    color: #f59e0b;
-}
-
-.text-accent {
-    color: #6366f1;
-}
-
-.text-error {
-    color: #ef4444;
-}
-
-.text-info {
-    color: #06b6d4;
+    background: var(--color-info);
 }
 
 /* ── Responsive ──────────────────────────────────────────── */

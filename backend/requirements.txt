@@ -9,17 +9,8 @@ pydantic-settings>=2.0.0
 # Gemini AI
 google-genai>=1.0.0
 
-# NLP & Text Processing
-spacy>=3.5.0
-nltk>=3.8.1
-scikit-learn>=1.2.2
-numpy>=1.24.3
-python-dateutil>=2.8.2
-
-# Document Processing
-pdfplumber>=0.9.0
+# Document Processing (DOCX - Gemini handles PDF natively)
 python-docx>=0.8.11
-python-magic>=0.4.27
 
 # Voice & Audio
 edge-tts>=6.1.0

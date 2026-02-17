@@ -5,33 +5,36 @@
     gap: var(--space-2);
     border: none;
     font-weight: 600;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-full);
     transition: all var(--transition-fast);
     white-space: nowrap;
     position: relative;
     overflow: hidden;
+    letter-spacing: 0.01em;
 }
 
 /* Variants */
 .btn--primary {
-    background: var(--gradient-primary);
-    color: #fff;
-    box-shadow: 0 4px 14px var(--color-accent-glow);
+    background: var(--color-accent);
+    color: #1a1a1a;
+    box-shadow: 0 4px 20px var(--color-accent-glow);
 }
 
 .btn--primary:hover {
-    box-shadow: 0 6px 24px var(--color-accent-glow);
+    background: var(--color-accent-hover);
+    box-shadow: 0 6px 30px var(--color-accent-glow), 0 0 60px rgba(201, 169, 98, 0.1);
 }
 
 .btn--secondary {
-    background: var(--color-bg-elevated);
+    background: transparent;
     color: var(--color-text-primary);
     border: 1px solid var(--color-border);
 }
 
 .btn--secondary:hover {
-    background: var(--color-bg-tertiary);
     border-color: var(--color-accent);
+    color: var(--color-accent);
+    background: var(--color-accent-light);
 }
 
 .btn--ghost {
@@ -49,22 +52,24 @@
     color: #fff;
 }
 
+.btn--danger:hover {
+    box-shadow: 0 4px 20px rgba(240, 96, 96, 0.3);
+}
+
 /* Sizes */
 .btn--sm {
-    padding: 6px 14px;
+    padding: 8px 18px;
     font-size: 0.8125rem;
-    border-radius: var(--radius-sm);
 }
 
 .btn--md {
-    padding: 10px 22px;
+    padding: 11px 26px;
     font-size: 0.875rem;
 }
 
 .btn--lg {
-    padding: 14px 32px;
+    padding: 14px 36px;
     font-size: 1rem;
-    border-radius: var(--radius-lg);
 }
 
 .btn--full {
@@ -74,14 +79,14 @@
 /* Loading */
 .btn--loading {
     pointer-events: none;
-    opacity: 0.8;
+    opacity: 0.7;
 }
 
 .btn__spinner {
     width: 16px;
     height: 16px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    border-top-color: #fff;
+    border: 2px solid rgba(26, 26, 26, 0.3);
+    border-top-color: #1a1a1a;
     border-radius: 50%;
     animation: spin 0.6s linear infinite;
 }

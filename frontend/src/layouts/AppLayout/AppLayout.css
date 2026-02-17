@@ -13,9 +13,9 @@
 
 .app-layout__content {
     flex: 1;
-    padding: var(--space-8);
-    background: var(--gradient-mesh);
+    padding: var(--space-8) var(--space-10);
     overflow-y: auto;
+    background: var(--color-bg-primary);
 }
 
 @media (max-width: 768px) {

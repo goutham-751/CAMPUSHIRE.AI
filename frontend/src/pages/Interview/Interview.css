@@ -1,6 +1,11 @@
+/* ═══════════════════════════════════════════════════════════════
+   Interview Page — CRED-Inspired Premium Styles
+   ═══════════════════════════════════════════════════════════════ */
+
 .interview-page__desc {
     color: var(--color-text-secondary);
     margin-bottom: var(--space-6);
+    font-size: 0.9rem;
 }
 
 .interview-page__layout {
@@ -32,7 +37,7 @@
     align-items: center;
     gap: var(--space-3);
     padding: var(--space-3) var(--space-4);
-    border: 1.5px dashed var(--color-border);
+    border: 1.5px dashed rgba(255, 255, 255, 0.08);
     border-radius: var(--radius-md);
     cursor: pointer;
     font-size: 0.875rem;
@@ -63,10 +68,16 @@
 .interview-page__q-card {
     cursor: pointer;
     flex-direction: column;
+    transition: all var(--transition-base);
+}
+
+.interview-page__q-card:hover {
+    border-color: rgba(201, 169, 98, 0.12);
 }
 
 .interview-page__q-card.active {
     border-color: var(--color-accent);
+    box-shadow: var(--shadow-glow);
 }
 
 .interview-page__q-top {
@@ -98,7 +109,7 @@
 
 .interview-page__q-tag {
     font-size: 0.7rem;
-    padding: 2px 8px;
+    padding: 3px 10px;
     border-radius: var(--radius-full);
     background: var(--color-accent-light);
     color: var(--color-accent);
@@ -108,11 +119,12 @@
 
 .interview-page__q-difficulty {
     font-size: 0.7rem;
-    padding: 2px 8px;
+    padding: 3px 10px;
     border-radius: var(--radius-full);
-    border: 1px solid;
+    border: 1px solid var(--color-border);
     font-weight: 600;
     text-transform: capitalize;
+    color: var(--color-text-secondary);
 }
 
 .interview-page__q-card p {
@@ -147,6 +159,7 @@
     font-size: 1.4rem;
     font-weight: 800;
     font-family: var(--font-primary);
+    color: var(--color-accent);
 }
 
 .eval-result {
@@ -214,11 +227,11 @@
 }
 
 .eval-result__list--success li svg {
-    color: #10b981;
+    color: var(--color-success);
 }
 
 .eval-result__list--warning li svg {
-    color: #f59e0b;
+    color: var(--color-warning);
 }
 
 .eval-result__sample {
@@ -230,18 +243,6 @@
     color: var(--color-text-secondary);
     line-height: 1.7;
     font-style: italic;
-}
-
-.text-success {
-    color: #10b981;
-}
-
-.text-warning {
-    color: #f59e0b;
-}
-
-.text-accent {
-    color: #6366f1;
 }
 
 /* Empty & Loader */
