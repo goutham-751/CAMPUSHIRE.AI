@@ -15,7 +15,7 @@ AI-powered campus hiring platform with resume parsing, ATS scoring, interview qu
 - Python 3.8 or higher
 - Node.js 16 or higher
 - npm or yarn
-- Gemini API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
+- Groq API key from [Groq Console](https://console.groq.com)
 
 ## Quick Start
 
@@ -33,8 +33,8 @@ AI-powered campus hiring platform with resume parsing, ATS scoring, interview qu
 
 2. **Create `.env` file in project root:**
    ```env
-   GEMINI_API_KEY=your_gemini_api_key_here
-   GEMINI_MODEL=gemini-2.0-flash
+   GROQ_API_KEY=your_groq_api_key_here
+   GROQ_MODEL=llama-3.3-70b-versatile
    DEBUG=True
    ```
 
@@ -88,14 +88,9 @@ The frontend will be available at `http://localhost:5173` (or the port shown in 
    pip install -r requirements.txt
    ```
 
-3. Download spaCy model:
-   ```bash
-   python -m spacy download en_core_web_sm
-   ```
+3. Create `.env` file in project root with your Groq API key
 
-4. Create `.env` file in project root with your Gemini API key
-
-5. Start server:
+4. Start server:
    ```bash
    uvicorn main:app --reload
    ```
@@ -157,17 +152,17 @@ CAMPUSHIRE.AI2/
 
 ### Backend Issues
 
-1. **"GEMINI_API_KEY is not set"**
+1. **"GROQ_API_KEY is not set"**
    - Ensure `.env` file exists in project root
-   - Check that `GEMINI_API_KEY` is set correctly
+   - Check that `GROQ_API_KEY` is set correctly
 
-2. **"English language model not found"**
-   - Run: `python -m spacy download en_core_web_sm`
-   - Ensure you're in the virtual environment
-
-3. **Import errors**
+2. **Import errors**
    - Ensure virtual environment is activated
    - Run: `pip install -r requirements.txt`
+
+3. **Groq rate limits**
+   - Free tier: 14,400 requests/day, 30 requests/min
+   - Check usage at [console.groq.com/settings/usage](https://console.groq.com/settings/usage)
 
 ### Frontend Issues
 

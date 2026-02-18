@@ -17,10 +17,10 @@ class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
 
     # --- API Keys ---
-    GEMINI_API_KEY: str = ""
+    GROQ_API_KEY: str = ""
 
-    # --- Gemini Model ---
-    GEMINI_MODEL: str = "gemini-2.0-flash"
+    # --- Groq Model ---
+    GROQ_MODEL: str = "llama-3.3-70b-versatile"
 
     # --- CORS ---
     CORS_ORIGINS: List[str] = ["*"]
@@ -53,10 +53,10 @@ def validate_settings():
     """Validate that required settings are configured."""
     errors = []
     
-    if not settings.GEMINI_API_KEY or settings.GEMINI_API_KEY == "your_gemini_api_key_here":
+    if not settings.GROQ_API_KEY or settings.GROQ_API_KEY == "your_groq_api_key_here":
         errors.append(
-            "GEMINI_API_KEY is not set. Please set it in your .env file.\n"
-            "Get your API key from: https://makersuite.google.com/app/apikey"
+            "GROQ_API_KEY is not set. Please set it in your .env file.\n"
+            "Get your API key from: https://console.groq.com"
         )
     
     if errors:
@@ -67,7 +67,7 @@ def validate_settings():
             f"{error_msg}\n"
             f"{'='*60}\n"
             f"Please create a .env file in the project root with:\n"
-            f"GEMINI_API_KEY=your_actual_api_key_here\n"
+            f"GROQ_API_KEY=your_actual_api_key_here\n"
             f"DEBUG=True\n"
         )
     

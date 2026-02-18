@@ -2,7 +2,7 @@ import os
 import json
 import random
 from typing import Dict, List, Optional, Any
-from google import genai
+from groq import AsyncGroq
 from dotenv import load_dotenv
 
 from backend.config import settings
@@ -11,15 +11,15 @@ load_dotenv()
 
 
 class QuestionGenerator:
-    """Generates tailored interview questions using Gemini AI."""
+    """Generates tailored interview questions using Groq AI."""
 
     def __init__(self):
-        self.api_key = settings.GEMINI_API_KEY
+        self.api_key = settings.GROQ_API_KEY
         if not self.api_key:
-            raise ValueError("GEMINI_API_KEY environment variable not set")
+            raise ValueError("GROQ_API_KEY environment variable not set")
 
-        self.client = genai.Client(api_key=self.api_key)
-        self.model_name = settings.GEMINI_MODEL
+        self.client = AsyncGroq(api_key=self.api_key)
+        self.model_name = settings.GROQ_MODEL
 
         self.question_weights = {
             "technical": 40,
@@ -89,23 +89,17 @@ class QuestionGenerator:
                 industry=industry,
             )
 
-            response = await self.client.aio.models.generate_content(
-                model=self.model_name, contents=prompt
+            response = await self.client.chat.completions.create(
+                model=self.model_name,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.7,
+                max_tokens=4096,
             )
-            
-            # Handle response text extraction
-            response_text = ""
-            if hasattr(response, 'text') and response.text:
-                response_text = response.text
-            elif hasattr(response, 'candidates') and response.candidates:
-                if hasattr(response.candidates[0], 'content') and response.candidates[0].content:
-                    parts = getattr(response.candidates[0].content, 'parts', None)
-                    if parts is not None:
-                        response_text = "".join(part.text for part in parts if hasattr(part, 'text') and part.text)
-            
+
+            response_text = response.choices[0].message.content
             if not response_text:
                 raise ValueError("No text content in API response")
-            
+
             questions = self._parse_questions_response(response_text)
             balanced_questions = self._balance_questions(questions, num_questions)
 
@@ -146,23 +140,17 @@ class QuestionGenerator:
                 question=question,
                 answer=answer,
             )
-            response = await self.client.aio.models.generate_content(
-                model=self.model_name, contents=prompt
+            response = await self.client.chat.completions.create(
+                model=self.model_name,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.3,
+                max_tokens=2048,
             )
-            
-            # Handle response text extraction
-            response_text = ""
-            if hasattr(response, 'text') and response.text:
-                response_text = response.text
-            elif hasattr(response, 'candidates') and response.candidates:
-                if hasattr(response.candidates[0], 'content') and response.candidates[0].content:
-                    parts = getattr(response.candidates[0].content, 'parts', None)
-                    if parts is not None:
-                        response_text = "".join(part.text for part in parts if hasattr(part, 'text') and part.text)
-            
+
+            response_text = response.choices[0].message.content
             if not response_text:
                 raise ValueError("No text content in API response")
-            
+
             result = self._parse_json_response(response_text)
             return {"success": True, **result}
         except Exception as e:

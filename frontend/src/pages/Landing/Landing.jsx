@@ -67,7 +67,7 @@ const FEATURES = [
     {
         icon: Zap,
         title: 'Instant Results',
-        desc: 'Powered by Gemini 2.0 Flash for blazing-fast, high-quality AI analysis.',
+        desc: 'Powered by Groq AI for blazing-fast, high-quality AI analysis.',
     },
 ];
 
@@ -123,7 +123,7 @@ export default function Landing() {
                         transition={{ delay: 0.2, type: 'spring' }}
                     >
                         <Sparkles size={14} />
-                        <span>Powered by Gemini AI</span>
+                        <span>Powered by Groq AI</span>
                     </motion.div>
 
                     <motion.h1
