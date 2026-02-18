@@ -8,7 +8,7 @@ load_dotenv()
 api_key = os.getenv("GEMINI_API_KEY")
 print(f"API Key found: {bool(api_key)}")
 print(f"API Key length: {len(api_key) if api_key else 0}")
-
+print(f"Key format: {'OLD' if api_key.startswith('AIzaSy') else 'NEW'}")
 try:
     # NEW API: Create client directly
     client = genai.Client(api_key=api_key)
