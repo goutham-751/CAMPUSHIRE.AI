@@ -267,3 +267,225 @@
         position: static;
     }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   Multi-Agent Panel Evaluation — Premium Styles
+   ═══════════════════════════════════════════════════════════════ */
+
+.panel-eval {
+    margin-top: var(--space-5);
+    border-top: 1px solid var(--color-border);
+    padding-top: var(--space-5);
+}
+
+.panel-eval__aggregate {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    margin-bottom: var(--space-5);
+    padding: var(--space-4);
+    background: var(--color-bg-tertiary);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+}
+
+.panel-eval__aggregate-info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.panel-eval__verdict-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 14px;
+    border-radius: var(--radius-full);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    width: fit-content;
+}
+
+.panel-eval__recommendation {
+    font-size: 0.84rem;
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* ── Agent Cards Grid ──────────────────────────────────────── */
+
+.panel-eval__agents {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-4);
+    margin-bottom: var(--space-4);
+}
+
+@media (max-width: 900px) {
+    .panel-eval__agents {
+        grid-template-columns: 1fr;
+    }
+}
+
+.agent-card {
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4);
+    transition: all var(--transition-base);
+    position: relative;
+    overflow: hidden;
+}
+
+.agent-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--agent-color, var(--color-accent));
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.agent-card:hover {
+    border-color: var(--agent-color, var(--color-accent));
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.agent-card__header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-3);
+}
+
+.agent-card__avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.agent-card__info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+}
+
+.agent-card__info strong {
+    font-size: 0.85rem;
+    color: var(--color-text-primary);
+}
+
+.agent-card__role {
+    font-size: 0.72rem;
+    color: var(--color-text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+}
+
+.agent-card__score {
+    font-size: 1.6rem;
+    font-weight: 800;
+    font-family: var(--font-primary);
+    flex-shrink: 0;
+}
+
+.agent-card__verdict {
+    font-size: 0.82rem;
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+    margin-bottom: var(--space-2);
+    font-style: italic;
+}
+
+.agent-card__observation {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    padding: var(--space-2) var(--space-3);
+    background: rgba(99, 102, 241, 0.06);
+    border-radius: var(--radius-sm);
+    font-size: 0.78rem;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+    margin-bottom: var(--space-3);
+    border-left: 2px solid var(--agent-color, var(--color-accent));
+}
+
+.agent-card__section {
+    margin-bottom: var(--space-2);
+}
+
+.agent-card__section h6 {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-text-tertiary);
+    margin-bottom: 4px;
+}
+
+.agent-card__section ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.agent-card__section li {
+    display: flex;
+    align-items: flex-start;
+    gap: 5px;
+    font-size: 0.76rem;
+    color: var(--color-text-secondary);
+    padding: 2px 0;
+    line-height: 1.4;
+}
+
+.agent-card__section li svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+    color: inherit;
+}
+
+/* ── Debate Summary ─────────────────────────────────────────── */
+
+.panel-eval__debate {
+    background: var(--color-bg-tertiary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.panel-eval__debate-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    font-size: 0.82rem;
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+}
+
+.panel-eval__debate-item svg {
+    flex-shrink: 0;
+    margin-top: 3px;
+}
+
+.panel-eval__debate-item strong {
+    color: var(--color-text-primary);
+}

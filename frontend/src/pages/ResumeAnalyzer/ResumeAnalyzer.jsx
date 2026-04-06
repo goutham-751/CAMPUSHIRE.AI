@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Upload, FileText, BarChart3, MessageSquare, CheckCircle, AlertCircle, Loader2,
     Mail, Phone, Linkedin, Github, Award, BookOpen, Briefcase, Code, Globe, Star,
-    TrendingUp, Target, Lightbulb, ChevronDown, ChevronUp, Zap, Search
+    TrendingUp, Target, Lightbulb, ChevronDown, ChevronUp, Zap, Search, Layers
 } from 'lucide-react';
 import Card from '../../components/Card/Card';
 import Button from '../../components/Button/Button';
@@ -300,6 +300,75 @@ function FeedbackResult({ data }) {
     );
 }
 
+/* ── Semantic Match Result ────────────────────────────────── */
+function SemanticMatchResultView({ data }) {
+    const res = data?.result || data || {};
+    const gradeColor = {
+        'Excellent Match': '#10b981', 'Strong Match': '#22c55e', 'Moderate Match': '#f59e0b',
+        'Weak Match': '#ef4444', 'Poor Match': '#dc2626',
+    };
+    const sections = res.section_scores || {};
+
+    return (
+        <div className="semantic-result">
+            {/* Top Score */}
+            <div className="semantic-result__top">
+                <ScoreGauge score={res.overall_similarity || 0} label="Semantic Match" />
+                <div className="semantic-result__grade-area">
+                    <span className="semantic-result__grade" style={{
+                        background: `${gradeColor[res.match_grade] || '#6366f1'}15`,
+                        color: gradeColor[res.match_grade] || '#6366f1',
+                        border: `1px solid ${gradeColor[res.match_grade] || '#6366f1'}40`
+                    }}>{res.match_grade}</span>
+                    {res.job_title && <span className="semantic-result__job-title">vs. {res.job_title}</span>}
+                </div>
+            </div>
+
+            {/* Section Breakdown */}
+            {Object.keys(sections).length > 0 && (
+                <div className="semantic-result__sections">
+                    <h4><Layers size={16} /> Section Breakdown</h4>
+                    {Object.entries(sections).map(([key, score], i) => (
+                        <CategoryBar key={key} name={key.charAt(0).toUpperCase() + key.slice(1)} score={score} delay={i * 0.1} />
+                    ))}
+                </div>
+            )}
+
+            {/* Keywords */}
+            <div className="semantic-result__keywords">
+                {res.matched_keywords?.length > 0 && (
+                    <div className="semantic-result__kw-group">
+                        <h5><CheckCircle size={14} color="#10b981" /> Matched Keywords ({res.matched_keywords.length})</h5>
+                        <div className="tag-list">
+                            {res.matched_keywords.map((kw, i) => (
+                                <span key={i} className="tag-list__item" style={{ borderColor: '#10b981' }}>{kw}</span>
+                            ))}
+                        </div>
+                    </div>
+                )}
+                {res.missing_keywords?.length > 0 && (
+                    <div className="semantic-result__kw-group">
+                        <h5><AlertCircle size={14} color="#ef4444" /> Missing Keywords ({res.missing_keywords.length})</h5>
+                        <div className="tag-list">
+                            {res.missing_keywords.map((kw, i) => (
+                                <span key={i} className="tag-list__item" style={{ borderColor: '#ef4444' }}>{kw}</span>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* Recommendations */}
+            {res.recommendations?.length > 0 && (
+                <div className="semantic-result__recs">
+                    <h4><Lightbulb size={16} /> Recommendations</h4>
+                    <ul>{res.recommendations.map((r, i) => <li key={i}>{r}</li>)}</ul>
+                </div>
+            )}
+        </div>
+    );
+}
+
 /* ── Main Component ───────────────────────────────────────── */
 export default function ResumeAnalyzer() {
     const [file, setFile] = useState(null);
@@ -333,6 +402,9 @@ export default function ResumeAnalyzer() {
             } else if (action === 'score') {
                 data = await resumeApi.score(file, jobTitle, company, jobDesc);
                 trackActivity({ type: 'ats_score', text: `ATS Score: ${data.overall_score || 0}%`, score: data.overall_score, scores: data.scores, icon: 'BarChart3' });
+            } else if (action === 'semantic') {
+                data = await resumeApi.semanticMatch(file, jobDesc, jobTitle);
+                trackActivity({ type: 'semantic_match', text: `Semantic Match: ${data?.result?.overall_similarity || 0}%`, score: data?.result?.overall_similarity, icon: 'Layers' });
             } else {
                 data = await resumeApi.feedback(file, jobTitle, company, jobDesc);
                 trackActivity({ type: 'feedback', text: 'Feedback report generated', icon: 'MessageSquare' });
@@ -404,6 +476,9 @@ export default function ResumeAnalyzer() {
                         <Button variant="secondary" size="sm" icon={BarChart3} loading={loading && mode === 'score'} onClick={() => handleAnalyze('score')} disabled={!file || !jobDesc}>
                             ATS Score
                         </Button>
+                        <Button variant="secondary" size="sm" icon={Layers} loading={loading && mode === 'semantic'} onClick={() => handleAnalyze('semantic')} disabled={!file || !jobDesc}>
+                            Semantic Match
+                        </Button>
                         <Button variant="secondary" size="sm" icon={MessageSquare} loading={loading && mode === 'feedback'} onClick={() => handleAnalyze('feedback')} disabled={!file || !jobDesc}>
                             Get Feedback
                         </Button>
@@ -436,10 +511,12 @@ export default function ResumeAnalyzer() {
                                 <h3 className="resume-page__result-title">
                                     {mode === 'parse' && <><FileText size={20} /> Parsed Resume</>}
                                     {mode === 'score' && <><BarChart3 size={20} /> ATS Score Report</>}
+                                    {mode === 'semantic' && <><Layers size={20} /> Semantic Match Report</>}
                                     {mode === 'feedback' && <><MessageSquare size={20} /> Improvement Feedback</>}
                                 </h3>
                                 {mode === 'parse' && <ParsedResult data={result} />}
                                 {mode === 'score' && <ScoreResult data={result} />}
+                                {mode === 'semantic' && <SemanticMatchResultView data={result} />}
                                 {mode === 'feedback' && <FeedbackResult data={result} />}
                             </Card>
                         </motion.div>

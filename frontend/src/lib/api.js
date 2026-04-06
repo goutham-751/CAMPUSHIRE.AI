@@ -7,7 +7,7 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
 const api = axios.create({
     baseURL: API_BASE,
-    timeout: 60000,
+    timeout: 120000,
     headers: { 'Accept': 'application/json' },
 });
 
@@ -24,7 +24,6 @@ api.interceptors.request.use(
 // ── Response interceptor ─────────────────────────────────────
 api.interceptors.response.use(
     (response) => {
-        // For blob responses (e.g. TTS audio), return the raw blob
         if (response.config.responseType === 'blob') {
             return response.data;
         }
@@ -80,6 +79,19 @@ export const resumeApi = {
         form.append('job_description', jobDescription);
         return api.post('/api/resume/feedback', form);
     },
+    semanticMatch: (file, jobDescription, jobTitle = '') => {
+        const form = new FormData();
+        form.append('file', file);
+        form.append('job_description', jobDescription);
+        form.append('job_title', jobTitle);
+        return api.post('/api/resume/semantic-match', form);
+    },
+    batchMatch: (file, jobEntries) => {
+        const form = new FormData();
+        form.append('file', file);
+        form.append('job_entries', JSON.stringify(jobEntries));
+        return api.post('/api/resume/batch-match', form);
+    },
 };
 
 // ── Interview endpoints ──────────────────────────────────────
@@ -96,6 +108,8 @@ export const interviewApi = {
     },
     evaluateAnswer: (question, answer, jobTitle) =>
         api.post('/api/interview/evaluate', { question, answer, job_title: jobTitle }),
+    panelEvaluate: (question, answer, jobTitle) =>
+        api.post('/api/interview/panel-evaluate', { question, answer, job_title: jobTitle }),
 };
 
 // ── Voice endpoints ──────────────────────────────────────────

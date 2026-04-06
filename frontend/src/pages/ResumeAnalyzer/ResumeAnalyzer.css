@@ -566,6 +566,115 @@
     background: var(--color-info);
 }
 
+/* ── Semantic Match Result ───────────────────────────────── */
+
+.semantic-result {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+.semantic-result__top {
+    display: flex;
+    gap: var(--space-6);
+    align-items: center;
+    padding-bottom: var(--space-5);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.semantic-result__grade-area {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.semantic-result__grade {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 18px;
+    border-radius: var(--radius-full);
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    width: fit-content;
+}
+
+.semantic-result__job-title {
+    font-size: 0.82rem;
+    color: var(--color-text-tertiary);
+    font-style: italic;
+}
+
+.semantic-result__sections {
+    padding: var(--space-4);
+    background: var(--color-bg-tertiary);
+    border-radius: var(--radius-md);
+}
+
+.semantic-result__sections h4 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    margin-bottom: var(--space-3);
+    color: var(--color-text-primary);
+}
+
+.semantic-result__keywords {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-4);
+}
+
+.semantic-result__kw-group h5 {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    margin-bottom: var(--space-2);
+    color: var(--color-text-secondary);
+}
+
+.semantic-result__recs {
+    padding: var(--space-4);
+    background: var(--color-bg-tertiary);
+    border-radius: var(--radius-md);
+    border-left: 3px solid var(--color-accent);
+}
+
+.semantic-result__recs h4 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    margin-bottom: var(--space-3);
+    color: var(--color-accent);
+}
+
+.semantic-result__recs ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.semantic-result__recs li {
+    position: relative;
+    padding: 6px 0 6px 18px;
+    font-size: 0.82rem;
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+}
+
+.semantic-result__recs li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--color-accent);
+    font-weight: 700;
+}
+
 /* ── Responsive ──────────────────────────────────────────── */
 @media (max-width: 640px) {
     .score-result__top {
@@ -578,6 +687,15 @@
     }
 
     .parsed-result__projects {
+        grid-template-columns: 1fr;
+    }
+
+    .semantic-result__top {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .semantic-result__keywords {
         grid-template-columns: 1fr;
     }
 }

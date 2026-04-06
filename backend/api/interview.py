@@ -1,5 +1,6 @@
 """
-Interview API routes — question generation and answer evaluation.
+Interview API routes — question generation, answer evaluation,
+and multi-agent panel evaluation.
 """
 
 import os
@@ -11,6 +12,8 @@ from backend.models.schemas import (
     InterviewQuestionsResponse,
     InterviewAnswerRequest,
     AnswerEvaluationResponse,
+    PanelEvaluationRequest,
+    PanelEvaluationResponse,
     ErrorResponse,
 )
 from backend.services.resume_parser import parse_resume
@@ -18,6 +21,7 @@ from backend.services.question_generator import (
     generate_interview_questions,
     evaluate_interview_answer,
 )
+from backend.services.agent_evaluator import panel_evaluate as run_panel_evaluate
 
 router = APIRouter(prefix="/api/interview", tags=["Interview"])
 
@@ -136,3 +140,39 @@ async def evaluate_answer(body: InterviewAnswerRequest):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e),
         )
+
+
+@router.post(
+    "/panel-evaluate",
+    response_model=PanelEvaluationResponse,
+    responses={400: {"model": ErrorResponse}, 500: {"model": ErrorResponse}},
+    summary="Multi-Agent Panel Evaluation",
+    description=(
+        "Submit a question and the candidate's answer. Three AI agent personas "
+        "(Technical Lead, HR Manager, Domain Expert) independently evaluate the "
+        "answer, then a moderator aggregates results and highlights disagreements."
+    ),
+)
+async def panel_evaluate_answer(body: PanelEvaluationRequest):
+    try:
+        result = await run_panel_evaluate(
+            question=body.question,
+            answer=body.answer,
+            job_title=body.job_title,
+        )
+
+        if not result.get("success"):
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=result.get("error", "Panel evaluation failed"),
+            )
+
+        return PanelEvaluationResponse(**result)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
+        )
+

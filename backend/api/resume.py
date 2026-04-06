@@ -1,11 +1,12 @@
 """
-Resume API routes — upload, parse, ATS score, and feedback.
+Resume API routes — upload, parse, ATS score, feedback, and semantic matching.
 """
 
 import os
+import json
 import shutil
 import tempfile
-from typing import Optional
+from typing import Optional, List
 from fastapi import APIRouter, File, Form, UploadFile, HTTPException, status
 
 from backend.config import settings
@@ -13,11 +14,15 @@ from backend.models.schemas import (
     ResumeParseResponse,
     ATSScoreResponse,
     FeedbackResponse,
+    SemanticMatchResponse,
+    SemanticMatchResult,
+    BatchMatchResponse,
     ErrorResponse,
 )
 from backend.services.resume_parser import parse_resume
 from backend.services.ats_scorer import score_resume_ats
 from backend.services.feedback_generator import generate_resume_feedback
+from backend.services.semantic_matcher import compute_semantic_match, batch_semantic_match
 
 router = APIRouter(prefix="/api/resume", tags=["Resume"])
 
@@ -167,3 +172,104 @@ async def get_feedback(
     finally:
         if os.path.exists(file_path):
             os.unlink(file_path)
+
+
+@router.post(
+    "/semantic-match",
+    response_model=SemanticMatchResponse,
+    responses={400: {"model": ErrorResponse}, 500: {"model": ErrorResponse}},
+    summary="Semantic match resume vs job description",
+    description=(
+        "Upload a resume and provide a job description. Uses TF-IDF vectorization "
+        "and cosine similarity to compute a mathematical semantic match score with "
+        "section-level breakdowns and keyword analysis."
+    ),
+)
+async def semantic_match(
+    file: UploadFile = File(...),
+    job_title: str = Form(default=""),
+    job_description: str = Form(...),
+):
+    _validate_file(file)
+    file_path = await _save_upload(file)
+    try:
+        resume_data = await parse_resume(file_path)
+        result = compute_semantic_match(resume_data, job_description, job_title)
+
+        if not result.get("success"):
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=result.get("error", "Semantic matching failed"),
+            )
+
+        return SemanticMatchResponse(
+            success=True,
+            result=SemanticMatchResult(**result),
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
+        )
+    finally:
+        if os.path.exists(file_path):
+            os.unlink(file_path)
+
+
+@router.post(
+    "/batch-match",
+    response_model=BatchMatchResponse,
+    responses={400: {"model": ErrorResponse}, 500: {"model": ErrorResponse}},
+    summary="Batch compare resume against multiple job descriptions",
+    description=(
+        "Upload a resume and provide multiple job descriptions. Returns a ranked "
+        "list showing which jobs are the best semantic match for the candidate."
+    ),
+)
+async def batch_match(
+    file: UploadFile = File(...),
+    job_entries: str = Form(...),
+):
+    _validate_file(file)
+    file_path = await _save_upload(file)
+    try:
+        resume_data = await parse_resume(file_path)
+
+        # Parse job entries JSON: [{"title": "...", "description": "..."}, ...]
+        try:
+            entries = json.loads(job_entries)
+            if not isinstance(entries, list):
+                raise ValueError("job_entries must be a JSON array")
+        except (json.JSONDecodeError, ValueError) as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid job_entries format: {str(e)}. Expected JSON array of objects with 'title' and 'description'.",
+            )
+
+        result = batch_semantic_match(resume_data, entries)
+
+        if not result.get("success"):
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=result.get("error", "Batch matching failed"),
+            )
+
+        return BatchMatchResponse(
+            success=True,
+            results=[SemanticMatchResult(**r) for r in result.get("results", [])],
+            total=result.get("total", 0),
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
+        )
+    finally:
+        if os.path.exists(file_path):
+            os.unlink(file_path)
+
+

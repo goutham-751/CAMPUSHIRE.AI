@@ -1,5 +1,6 @@
 """
-Voice API routes — text-to-speech, speech-to-text, and voice listing.
+Voice API routes — text-to-speech, speech-to-text (with confidence metrics),
+and voice listing.
 """
 
 import io
@@ -10,6 +11,7 @@ from backend.models.schemas import (
     TTSRequest,
     STTResponse,
     VoicesResponse,
+    ConfidenceMetrics,
     ErrorResponse,
 )
 from backend.services.voice_engine import (
@@ -17,6 +19,7 @@ from backend.services.voice_engine import (
     speech_to_text,
     get_available_voices,
 )
+from backend.services.tone_analyzer import analyze_tone
 
 router = APIRouter(prefix="/api/voice", tags=["Voice"])
 
@@ -63,8 +66,11 @@ async def tts(body: TTSRequest):
     "/stt",
     response_model=STTResponse,
     responses={400: {"model": ErrorResponse}, 500: {"model": ErrorResponse}},
-    summary="Speech-to-text",
-    description="Upload an audio file (WAV, MP3, etc.) and get the text transcription.",
+    summary="Speech-to-text with confidence analysis",
+    description=(
+        "Upload an audio file (WAV, MP3, WebM, etc.) and get the text transcription "
+        "along with real-time confidence metrics (WPM, filler words, pause ratio)."
+    ),
 )
 async def stt(
     file: UploadFile = File(...),
@@ -83,11 +89,31 @@ async def stt(
                 error=result.get("error", "Transcription failed"),
             )
 
+        transcript = result.get("text", "")
+
+        # Run tone / confidence analysis on the audio
+        audio_format = "webm"
+        filename = file.filename or ""
+        if filename.endswith(".wav"):
+            audio_format = "wav"
+        elif filename.endswith(".mp3"):
+            audio_format = "mp3"
+        elif filename.endswith(".ogg"):
+            audio_format = "ogg"
+
+        tone_result = analyze_tone(content, transcript, audio_format)
+
+        # Build confidence metrics
+        confidence_metrics = None
+        if tone_result.get("success"):
+            confidence_metrics = ConfidenceMetrics(**tone_result)
+
         return STTResponse(
             success=True,
-            text=result.get("text"),
+            text=transcript,
             language=result.get("language", language),
             confidence=result.get("confidence", 0.0),
+            confidence_metrics=confidence_metrics,
         )
     except Exception as e:
         raise HTTPException(
@@ -105,3 +131,4 @@ async def stt(
 async def list_voices():
     voices = await get_available_voices()
     return VoicesResponse(voices=voices)
+

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Mic, Volume2, Loader2, Play, Square, List, Upload, MessageSquare,
     CheckCircle, AlertCircle, ChevronRight, TrendingUp, Target, BookOpen,
-    StopCircle, SkipForward, BarChart3
+    StopCircle, SkipForward, BarChart3, Users, Activity, Zap
 } from 'lucide-react';
 import Card from '../../components/Card/Card';
 import Button from '../../components/Button/Button';
@@ -33,7 +33,7 @@ function Tabs({ active, onChange }) {
 }
 
 /* ── Score Ring ────────────────────────────────────────────── */
-function ScoreRing({ score, size = 64 }) {
+function ScoreRing({ score, size = 64, label }) {
     const r = (size - 6) / 2;
     const c = 2 * Math.PI * r;
     const p = (score / 100) * c;
@@ -50,6 +50,81 @@ function ScoreRing({ score, size = 64 }) {
             </svg>
             <span className="vi-score-ring__val" style={{ color, fontSize: size * 0.26 }}>{Math.round(score)}</span>
         </div>
+    );
+}
+
+/* ── Confidence Dashboard (Tone Analysis) ────────────────── */
+function ConfidenceDashboard({ metrics }) {
+    if (!metrics || !metrics.success) return null;
+    const wpmColor = metrics.wpm_score >= 80 ? '#10b981' : metrics.wpm_score >= 60 ? '#f59e0b' : '#ef4444';
+    return (
+        <motion.div className="confidence-dash" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+            <div className="confidence-dash__header">
+                <Activity size={16} /> <h5>Confidence & Tone Analysis</h5>
+            </div>
+            <div className="confidence-dash__grid">
+                <div className="confidence-dash__main">
+                    <ScoreRing score={metrics.confidence_score} size={72} />
+                    <div>
+                        <span className="confidence-dash__label">Confidence Score</span>
+                        <span className="confidence-dash__val" style={{ color: metrics.confidence_score >= 80 ? '#10b981' : metrics.confidence_score >= 60 ? '#f59e0b' : '#ef4444' }}>
+                            {metrics.confidence_score >= 80 ? 'Confident' : metrics.confidence_score >= 60 ? 'Moderate' : 'Needs Work'}
+                        </span>
+                    </div>
+                </div>
+
+                <div className="confidence-dash__metrics">
+                    <div className="confidence-dash__metric">
+                        <span className="confidence-dash__metric-label">Words/Min</span>
+                        <span className="confidence-dash__metric-value" style={{ color: wpmColor }}>{Math.round(metrics.wpm)}</span>
+                        <div className="confidence-dash__bar">
+                            <div className="confidence-dash__bar-fill" style={{ width: `${Math.min(metrics.wpm_score, 100)}%`, background: wpmColor }} />
+                        </div>
+                        <span className="confidence-dash__metric-hint">{metrics.wpm_assessment}</span>
+                    </div>
+
+                    <div className="confidence-dash__metric">
+                        <span className="confidence-dash__metric-label">Filler Words</span>
+                        <span className="confidence-dash__metric-value" style={{ color: metrics.filler_score >= 80 ? '#10b981' : metrics.filler_score >= 60 ? '#f59e0b' : '#ef4444' }}>
+                            {metrics.filler_count}
+                        </span>
+                        <div className="confidence-dash__bar">
+                            <div className="confidence-dash__bar-fill" style={{ width: `${Math.min(metrics.filler_score, 100)}%`, background: metrics.filler_score >= 80 ? '#10b981' : metrics.filler_score >= 60 ? '#f59e0b' : '#ef4444' }} />
+                        </div>
+                        {metrics.filler_words?.length > 0 && (
+                            <div className="confidence-dash__fillers">
+                                {metrics.filler_words.map((f, i) => (
+                                    <span key={i} className="confidence-dash__filler-tag">"{f.word}" × {f.count}</span>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="confidence-dash__metric">
+                        <span className="confidence-dash__metric-label">Pause Ratio</span>
+                        <span className="confidence-dash__metric-value" style={{ color: metrics.pause_score >= 80 ? '#10b981' : metrics.pause_score >= 60 ? '#f59e0b' : '#ef4444' }}>
+                            {(metrics.pause_ratio * 100).toFixed(0)}%
+                        </span>
+                        <div className="confidence-dash__bar">
+                            <div className="confidence-dash__bar-fill" style={{ width: `${Math.min(metrics.pause_score, 100)}%`, background: metrics.pause_score >= 80 ? '#10b981' : metrics.pause_score >= 60 ? '#f59e0b' : '#ef4444' }} />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {metrics.tips?.length > 0 && (
+                <div className="confidence-dash__tips">
+                    <Zap size={13} color="var(--color-accent)" />
+                    <div>
+                        {metrics.tips.map((tip, i) => <p key={i}>{tip}</p>)}
+                    </div>
+                </div>
+            )}
+
+            <div className="confidence-dash__meta">
+                {metrics.word_count} words · {metrics.duration_seconds}s duration
+            </div>
+        </motion.div>
     );
 }
 
@@ -132,11 +207,16 @@ function VoiceTools() {
                 {sttResult && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                         {sttResult.success ? (
-                            <Card variant="gradient" padding><p style={{ fontStyle: 'italic' }}>"{sttResult.text}"</p>
-                                <span style={{ fontSize: '0.75rem', color: 'var(--color-text-tertiary)' }}>
-                                    Confidence: {((sttResult.confidence || 0) * 100).toFixed(0)}%
-                                </span>
-                            </Card>
+                            <>
+                                <Card variant="gradient" padding><p style={{ fontStyle: 'italic' }}>"{sttResult.text}"</p>
+                                    <span style={{ fontSize: '0.75rem', color: 'var(--color-text-tertiary)' }}>
+                                        Confidence: {((sttResult.confidence || 0) * 100).toFixed(0)}%
+                                    </span>
+                                </Card>
+                                {sttResult.confidence_metrics && (
+                                    <ConfidenceDashboard metrics={sttResult.confidence_metrics} />
+                                )}
+                            </>
                         ) : (
                             <Card variant="glass" padding><p style={{ color: 'var(--color-error)' }}>Error: {sttResult.error}</p></Card>
                         )}
@@ -176,6 +256,7 @@ function AIInterview() {
     const [isEvaluating, setIsEvaluating] = useState(false);
     const [currentEval, setCurrentEval] = useState(null);
     const [transcript, setTranscript] = useState('');
+    const [confidenceMetrics, setConfidenceMetrics] = useState(null);
 
     const mediaRecorderRef = useRef(null);
     const chunksRef = useRef([]);
@@ -261,29 +342,35 @@ function AIInterview() {
                 setIsEvaluating(true);
                 setTranscript('');
                 setCurrentEval(null);
+                setConfidenceMetrics(null);
 
                 try {
-                    // STT
+                    // STT (now includes confidence metrics)
                     const audioFile = new File([blob], 'answer.webm', { type: 'audio/webm' });
                     const sttResult = await voiceApi.stt(audioFile);
                     const text = sttResult?.text || '';
                     setTranscript(text);
 
+                    // Store confidence metrics from tone analysis
+                    if (sttResult?.confidence_metrics) {
+                        setConfidenceMetrics(sttResult.confidence_metrics);
+                    }
+
                     if (!text) {
-                        setCurrentEval({ score: 0, strengths: [], improvements: ['Could not transcribe your answer. Please speak clearly and try again.'] });
+                        setCurrentEval({ aggregated_score: 0, agents: [], overall_verdict: 'No Answer', final_recommendation: 'Could not transcribe your answer. Please speak clearly and try again.' });
                         setIsEvaluating(false);
                         resolve();
                         return;
                     }
 
-                    // Evaluate
+                    // Panel evaluation (multi-agent)
                     const q = questions[currentIdx];
                     const qText = typeof q === 'string' ? q : q.question || '';
-                    const evalData = await interviewApi.evaluateAnswer(qText, text, jobTitle);
+                    const evalData = await interviewApi.panelEvaluate(qText, text, jobTitle);
                     setCurrentEval(evalData);
-                    trackActivity({ type: 'answer_evaluated', text: `Voice answer scored ${evalData.score || 0}%`, score: evalData.score, icon: 'TrendingUp' });
+                    trackActivity({ type: 'panel_evaluated', text: `Voice panel score: ${evalData.aggregated_score || 0}%`, score: evalData.aggregated_score, icon: 'TrendingUp' });
                 } catch (e) {
-                    setCurrentEval({ score: 0, strengths: [], improvements: [`Error: ${e.message}`] });
+                    setCurrentEval({ aggregated_score: 0, agents: [], overall_verdict: 'Error', final_recommendation: `Error: ${e.message}` });
                 } finally {
                     setIsEvaluating(false);
                     resolve();
@@ -297,9 +384,10 @@ function AIInterview() {
     const nextQuestion = () => {
         // Save result
         const q = questions[currentIdx];
-        setResults(prev => [...prev, { question: typeof q === 'string' ? q : q.question, transcript, evaluation: currentEval }]);
+        setResults(prev => [...prev, { question: typeof q === 'string' ? q : q.question, transcript, evaluation: currentEval, confidence: confidenceMetrics }]);
         setCurrentEval(null);
         setTranscript('');
+        setConfidenceMetrics(null);
 
         if (currentIdx + 1 >= questions.length) {
             setPhase(PHASES.SUMMARY);
@@ -452,39 +540,42 @@ function AIInterview() {
                         </motion.div>
                     )}
 
-                    {/* Evaluation result */}
+                    {/* Evaluation result — Multi-Agent Panel */}
                     {currentEval && (
                         <motion.div className="vi-eval" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                             <div className="vi-eval__top">
-                                <ScoreRing score={currentEval.score || 0} />
+                                <ScoreRing score={currentEval.aggregated_score || 0} />
                                 <div>
-                                    <span className="vi-eval__label">Answer Score</span>
+                                    <span className="vi-eval__label">Panel Score</span>
                                     <span className="vi-eval__verdict" style={{
-                                        color: (currentEval.score || 0) >= 80 ? '#10b981' : (currentEval.score || 0) >= 60 ? '#f59e0b' : '#ef4444'
+                                        color: (currentEval.aggregated_score || 0) >= 80 ? '#10b981' : (currentEval.aggregated_score || 0) >= 60 ? '#f59e0b' : '#ef4444'
                                     }}>
-                                        {(currentEval.score || 0) >= 80 ? 'Excellent' : (currentEval.score || 0) >= 60 ? 'Good' : 'Needs Work'}
+                                        {currentEval.overall_verdict || 'Reviewed'}
                                     </span>
                                 </div>
                             </div>
 
-                            {currentEval.strengths?.length > 0 && (
-                                <div className="vi-eval__section">
-                                    <h5><TrendingUp size={14} style={{ color: '#10b981' }} /> Strengths</h5>
-                                    <ul>{currentEval.strengths.map((s, i) => <li key={i}><CheckCircle size={12} /> {s}</li>)}</ul>
+                            {/* Agent verdicts (compact) */}
+                            {currentEval.agents?.length > 0 && (
+                                <div className="vi-agents-compact">
+                                    {currentEval.agents.map((agent, i) => (
+                                        <div key={i} className="vi-agent-mini" style={{ borderLeftColor: agent.agent_color }}>
+                                            <div className="vi-agent-mini__head">
+                                                <span>{agent.agent_emoji} {agent.agent_name}</span>
+                                                <span style={{ color: agent.score >= 80 ? '#10b981' : agent.score >= 60 ? '#f59e0b' : '#ef4444', fontWeight: 700 }}>{Math.round(agent.score)}</span>
+                                            </div>
+                                            <p>{agent.verdict}</p>
+                                        </div>
+                                    ))}
                                 </div>
                             )}
-                            {currentEval.improvements?.length > 0 && (
-                                <div className="vi-eval__section">
-                                    <h5><Target size={14} style={{ color: '#f59e0b' }} /> Improvements</h5>
-                                    <ul>{currentEval.improvements.map((s, i) => <li key={i}><AlertCircle size={12} /> {s}</li>)}</ul>
-                                </div>
+
+                            {currentEval.final_recommendation && (
+                                <p className="vi-eval__recommendation">{currentEval.final_recommendation}</p>
                             )}
-                            {currentEval.sample_answer && (
-                                <div className="vi-eval__section">
-                                    <h5><BookOpen size={14} style={{ color: '#6366f1' }} /> Sample Answer</h5>
-                                    <p className="vi-eval__sample">{currentEval.sample_answer}</p>
-                                </div>
-                            )}
+
+                            {/* Confidence Dashboard */}
+                            {confidenceMetrics && <ConfidenceDashboard metrics={confidenceMetrics} />}
 
                             <Button variant="primary" icon={ChevronRight} onClick={nextQuestion}>
                                 {currentIdx + 1 >= questions.length ? 'View Summary' : 'Next Question'}
@@ -501,7 +592,7 @@ function AIInterview() {
         const allResults = [...results];
         // Include last result if we transitioned from nextQuestion
         const finalAvg = allResults.length > 0
-            ? Math.round(allResults.reduce((s, r) => s + (r.evaluation?.score || 0), 0) / allResults.length)
+            ? Math.round(allResults.reduce((s, r) => s + (r.evaluation?.aggregated_score || r.evaluation?.score || 0), 0) / allResults.length)
             : 0;
 
         return (
@@ -529,8 +620,8 @@ function AIInterview() {
                                     <span className="vi-summary__q-num">Q{i + 1}</span>
                                     <span className="vi-summary__q-text">{r.question}</span>
                                     <span className="vi-summary__q-score" style={{
-                                        color: (r.evaluation?.score || 0) >= 80 ? '#10b981' : (r.evaluation?.score || 0) >= 60 ? '#f59e0b' : '#ef4444'
-                                    }}>{r.evaluation?.score || 0}%</span>
+                                        color: (r.evaluation?.aggregated_score || r.evaluation?.score || 0) >= 80 ? '#10b981' : (r.evaluation?.aggregated_score || r.evaluation?.score || 0) >= 60 ? '#f59e0b' : '#ef4444'
+                                    }}>{r.evaluation?.aggregated_score || r.evaluation?.score || 0}%</span>
                                 </div>
                                 {r.transcript && r.transcript !== '(skipped)' && (
                                     <p className="vi-summary__q-answer">"{r.transcript}"</p>

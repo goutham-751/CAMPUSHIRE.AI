@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, MessageSquare, Send, Loader2, CheckCircle, AlertCircle, HelpCircle, TrendingUp, Target, BookOpen } from 'lucide-react';
+import { Upload, MessageSquare, Send, Loader2, CheckCircle, AlertCircle, HelpCircle, TrendingUp, Target, Users } from 'lucide-react';
 import Card from '../../components/Card/Card';
 import Button from '../../components/Button/Button';
 import { interviewApi, trackActivity } from '../../lib/api';
@@ -29,52 +29,90 @@ function ScoreRing({ score, size = 80 }) {
     );
 }
 
-/* ── Evaluation Result Component ──────────────────────────── */
-function EvalResult({ data }) {
+/* ── Panel Evaluation Result (Multi-Agent) ────────────────── */
+function PanelEvalResult({ data }) {
+    if (!data) return null;
+    const verdictColor = {
+        'Strong Hire': '#10b981', 'Hire': '#10b981', 'Lean Hire': '#f59e0b',
+        'Lean No Hire': '#ef4444', 'No Hire': '#ef4444', 'Needs Review': '#6366f1',
+    };
     return (
-        <motion.div className="eval-result" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-            <div className="eval-result__top">
-                <ScoreRing score={data.score || 0} />
-                <div className="eval-result__summary">
-                    <span className="eval-result__score-label">Answer Score</span>
-                    <span className="eval-result__score-text" style={{
-                        color: (data.score || 0) >= 80 ? '#10b981' : (data.score || 0) >= 60 ? '#f59e0b' : '#ef4444'
+        <motion.div className="panel-eval" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+            {/* Aggregated Score */}
+            <div className="panel-eval__aggregate">
+                <ScoreRing score={data.aggregated_score || 0} />
+                <div className="panel-eval__aggregate-info">
+                    <span className="panel-eval__verdict-badge" style={{
+                        background: `${verdictColor[data.overall_verdict] || '#6366f1'}20`,
+                        color: verdictColor[data.overall_verdict] || '#6366f1',
+                        border: `1px solid ${verdictColor[data.overall_verdict] || '#6366f1'}40`
                     }}>
-                        {(data.score || 0) >= 80 ? 'Excellent' : (data.score || 0) >= 60 ? 'Good' : 'Needs Improvement'}
+                        {data.overall_verdict || 'Panel Verdict'}
                     </span>
+                    <p className="panel-eval__recommendation">{data.final_recommendation}</p>
                 </div>
             </div>
 
-            {data.strengths?.length > 0 && (
-                <div className="eval-result__section">
-                    <h5><TrendingUp size={14} className="text-success" /> Strengths</h5>
-                    <ul className="eval-result__list eval-result__list--success">
-                        {data.strengths.map((s, i) => (
-                            <motion.li key={i} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.08 }}>
-                                <CheckCircle size={13} /> {s}
-                            </motion.li>
-                        ))}
-                    </ul>
-                </div>
-            )}
+            {/* Agent Cards */}
+            <div className="panel-eval__agents">
+                {(data.agents || []).map((agent, i) => (
+                    <motion.div
+                        key={agent.agent_id}
+                        className="agent-card"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.15 }}
+                        style={{ '--agent-color': agent.agent_color }}
+                    >
+                        <div className="agent-card__header">
+                            <div className="agent-card__avatar" style={{ background: `${agent.agent_color}20`, color: agent.agent_color }}>
+                                {agent.agent_emoji}
+                            </div>
+                            <div className="agent-card__info">
+                                <strong>{agent.agent_name}</strong>
+                                <span className="agent-card__role">{agent.agent_role}</span>
+                            </div>
+                            <div className="agent-card__score" style={{ color: agent.score >= 80 ? '#10b981' : agent.score >= 60 ? '#f59e0b' : '#ef4444' }}>
+                                {Math.round(agent.score)}
+                            </div>
+                        </div>
+                        <p className="agent-card__verdict">{agent.verdict}</p>
+                        {agent.key_observation && (
+                            <div className="agent-card__observation">
+                                <span>💡</span> {agent.key_observation}
+                            </div>
+                        )}
+                        {agent.strengths?.length > 0 && (
+                            <div className="agent-card__section">
+                                <h6><TrendingUp size={12} /> Strengths</h6>
+                                <ul>{agent.strengths.map((s, j) => <li key={j}><CheckCircle size={11} /> {s}</li>)}</ul>
+                            </div>
+                        )}
+                        {agent.improvements?.length > 0 && (
+                            <div className="agent-card__section">
+                                <h6><Target size={12} /> Improve</h6>
+                                <ul>{agent.improvements.map((s, j) => <li key={j}><AlertCircle size={11} /> {s}</li>)}</ul>
+                            </div>
+                        )}
+                    </motion.div>
+                ))}
+            </div>
 
-            {data.improvements?.length > 0 && (
-                <div className="eval-result__section">
-                    <h5><Target size={14} className="text-warning" /> Areas for Improvement</h5>
-                    <ul className="eval-result__list eval-result__list--warning">
-                        {data.improvements.map((item, i) => (
-                            <motion.li key={i} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.08 }}>
-                                <AlertCircle size={13} /> {item}
-                            </motion.li>
-                        ))}
-                    </ul>
-                </div>
-            )}
-
-            {data.sample_answer && (
-                <div className="eval-result__section">
-                    <h5><BookOpen size={14} className="text-accent" /> Sample Ideal Answer</h5>
-                    <div className="eval-result__sample">{data.sample_answer}</div>
+            {/* Debate Summary */}
+            {(data.consensus || data.disagreements) && (
+                <div className="panel-eval__debate">
+                    {data.consensus && (
+                        <div className="panel-eval__debate-item">
+                            <CheckCircle size={14} color="#10b981" />
+                            <div><strong>Consensus:</strong> {data.consensus}</div>
+                        </div>
+                    )}
+                    {data.disagreements && data.disagreements !== 'None — unanimous assessment' && (
+                        <div className="panel-eval__debate-item">
+                            <AlertCircle size={14} color="#f59e0b" />
+                            <div><strong>Disagreements:</strong> {data.disagreements}</div>
+                        </div>
+                    )}
                 </div>
             )}
         </motion.div>
@@ -119,9 +157,9 @@ export default function Interview() {
         setEvalLoading(true);
         setEvalResult(null);
         try {
-            const data = await interviewApi.evaluateAnswer(activeQ.question || activeQ, answer, jobTitle);
+            const data = await interviewApi.panelEvaluate(activeQ.question || activeQ, answer, jobTitle);
             setEvalResult(data);
-            trackActivity({ type: 'answer_evaluated', text: `Interview answer scored ${data.score || 0}%`, score: data.score, icon: 'TrendingUp' });
+            trackActivity({ type: 'panel_evaluated', text: `Panel score: ${data.aggregated_score || 0}% — ${data.overall_verdict || 'Reviewed'}`, score: data.aggregated_score, icon: 'TrendingUp' });
         } catch (err) {
             setError(err.message);
         } finally {
@@ -137,8 +175,8 @@ export default function Interview() {
 
     return (
         <motion.div className="interview-page" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <h2>Mock Interview</h2>
-            <p className="interview-page__desc">Generate AI-tailored interview questions and practice with real-time evaluation.</p>
+            <h2><Users size={24} style={{ marginRight: 8, verticalAlign: 'middle' }} /> AI Hiring Committee</h2>
+            <p className="interview-page__desc">Generate AI-tailored interview questions and get evaluated by a panel of 3 AI agents — Technical Lead, HR Manager & Domain Expert.</p>
 
             <div className="interview-page__layout">
                 {/* Left: Setup */}
@@ -225,11 +263,11 @@ export default function Interview() {
                                                 className="resume-page__textarea"
                                                 rows={5}
                                             />
-                                            <Button variant="primary" size="sm" icon={Send} loading={evalLoading} onClick={handleEvaluate} disabled={!answer}>
-                                                Evaluate Answer
+                                            <Button variant="primary" size="sm" icon={Users} loading={evalLoading} onClick={handleEvaluate} disabled={!answer}>
+                                                Evaluate with AI Panel
                                             </Button>
 
-                                            {evalResult && <EvalResult data={evalResult} />}
+                                            {evalResult && <PanelEvalResult data={evalResult} />}
                                         </Card>
                                     </motion.div>
                                 )}

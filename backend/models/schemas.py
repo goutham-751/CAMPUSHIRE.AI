@@ -138,7 +138,99 @@ class STTResponse(BaseModel):
     language: str = "en-US"
     confidence: float = 0.0
     error: Optional[str] = None
+    confidence_metrics: Optional[Any] = None
 
 
 class VoicesResponse(BaseModel):
     voices: Dict[str, List[str]] = Field(default_factory=dict)
+
+
+# ──────────────────── Multi-Agent Panel ─────────────────────────
+
+
+class AgentVerdict(BaseModel):
+    """One agent's individual evaluation."""
+    agent_id: str = ""
+    agent_name: str = ""
+    agent_role: str = ""
+    agent_emoji: str = ""
+    agent_color: str = ""
+    score: float = 0
+    verdict: str = ""
+    strengths: List[str] = Field(default_factory=list)
+    improvements: List[str] = Field(default_factory=list)
+    key_observation: str = ""
+
+
+class PanelEvaluationRequest(BaseModel):
+    """Request body for multi-agent panel evaluation."""
+    question: str = Field(..., min_length=1, max_length=2000)
+    answer: str = Field(..., min_length=1, max_length=5000)
+    job_title: str = Field(..., min_length=1, max_length=200)
+
+
+class PanelEvaluationResponse(BaseModel):
+    """Response from the multi-agent hiring committee."""
+    success: bool = True
+    agents: List[AgentVerdict] = Field(default_factory=list)
+    aggregated_score: float = 0
+    consensus: str = ""
+    disagreements: str = ""
+    final_recommendation: str = ""
+    overall_verdict: str = ""
+    error: Optional[str] = None
+
+
+# ──────────────────── Confidence Metrics ────────────────────────
+
+
+class FillerWordDetail(BaseModel):
+    word: str = ""
+    count: int = 0
+
+
+class ConfidenceMetrics(BaseModel):
+    """Speech confidence analysis results."""
+    success: bool = True
+    confidence_score: float = 0
+    duration_seconds: float = 0
+    word_count: int = 0
+    wpm: float = 0
+    wpm_score: float = 0
+    wpm_assessment: str = ""
+    filler_count: int = 0
+    filler_words: List[FillerWordDetail] = Field(default_factory=list)
+    filler_score: float = 0
+    pause_ratio: float = 0
+    pause_score: float = 0
+    tips: List[str] = Field(default_factory=list)
+    error: Optional[str] = None
+
+
+# ──────────────────── Semantic Matching ─────────────────────────
+
+
+class SemanticMatchResult(BaseModel):
+    """Result of a single resume-to-JD semantic match."""
+    success: bool = True
+    overall_similarity: float = 0
+    section_scores: Dict[str, float] = Field(default_factory=dict)
+    matched_keywords: List[str] = Field(default_factory=list)
+    missing_keywords: List[str] = Field(default_factory=list)
+    recommendations: List[str] = Field(default_factory=list)
+    job_title: str = ""
+    match_grade: str = ""
+    rank: Optional[int] = None
+
+
+class SemanticMatchResponse(BaseModel):
+    success: bool = True
+    result: Optional[SemanticMatchResult] = None
+    error: Optional[str] = None
+
+
+class BatchMatchResponse(BaseModel):
+    success: bool = True
+    results: List[SemanticMatchResult] = Field(default_factory=list)
+    total: int = 0
+    error: Optional[str] = None
