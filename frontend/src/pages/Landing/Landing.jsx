@@ -67,7 +67,7 @@ const FEATURES = [
     {
         icon: Zap,
         title: 'Instant Results',
-        desc: 'Powered by Groq AI for blazing-fast, high-quality AI analysis.',
+        desc: 'blazing-fast, high-quality AI analysis.',
     },
 ];
 
@@ -123,7 +123,6 @@ export default function Landing() {
                         transition={{ delay: 0.2, type: 'spring' }}
                     >
                         <Sparkles size={14} />
-                        <span>Powered by Groq AI</span>
                     </motion.div>
 
                     <motion.h1

@@ -1,7 +1,3 @@
-"""
-Resume parser using Groq API for structured parsing.
-Uses PyPDF2 for PDF text extraction, python-docx for DOCX.
-"""
 
 import os
 import json
