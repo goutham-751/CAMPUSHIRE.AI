@@ -18,8 +18,6 @@ edge-tts>=6.1.0
 gTTS>=2.3.2
 SpeechRecognition>=3.10.0
 pydub>=0.25.1
-pyaudio>=0.2.13
-pyttsx3>=2.90
 
 # Web & Async
 aiohttp>=3.8.4
