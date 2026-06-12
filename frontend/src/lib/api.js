@@ -30,6 +30,10 @@ api.interceptors.response.use(
         return response.data;
     },
     (error) => {
+        // Handle timeout or Render cold start proxy errors
+        if (error.code === 'ECONNABORTED' || error.response?.status === 502 || error.response?.status === 504 || error.message?.includes('timeout')) {
+            return Promise.reject(new Error("The server is waking up or taking too long to respond. Please wait a moment and try again."));
+        }
         const message = error.response?.data?.detail || error.response?.data?.error || error.message;
         return Promise.reject(new Error(message));
     },

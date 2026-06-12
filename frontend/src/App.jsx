@@ -2,6 +2,8 @@ import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './store/ThemeContext';
 import AppLayout from './layouts/AppLayout/AppLayout';
+import { healthApi } from './lib/api';
+import { useEffect } from 'react';
 
 /* ── Lazy-loaded pages ─────────────────────────────────────── */
 const Landing = lazy(() => import('./pages/Landing/Landing'));
@@ -25,6 +27,13 @@ function PageLoader() {
 
 /* ── App ───────────────────────────────────────────────────── */
 export default function App() {
+  // Warm up the Render backend to mitigate cold starts
+  useEffect(() => {
+    healthApi.check().catch(() => {
+      // ignore errors, this is just to wake up the server
+    });
+  }, []);
+
   return (
     <ThemeProvider>
       <BrowserRouter>
