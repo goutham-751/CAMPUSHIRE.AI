@@ -1,202 +1,144 @@
-# CampusHire.AI
+<div align="center">
+  <img src="https://img.shields.io/badge/Status-Production_Ready-success?style=for-the-badge" alt="Status" />
+  <img src="https://img.shields.io/badge/Architecture-Dual--Zone_AI-blue?style=for-the-badge" alt="Architecture" />
+  <img src="https://img.shields.io/badge/Inference-Groq_LPU-orange?style=for-the-badge" alt="Inference" />
+</div>
 
-AI-powered campus hiring platform with resume parsing, ATS scoring, interview question generation, and mock interview sessions.
+<h1 align="center">⚡ CampusHire.AI</h1>
 
-## Features
+<p align="center">
+  <b>The Enterprise-Grade Autonomous Recruitment & Screening Engine.</b><br/>
+  Transforming how modern startups and talent teams evaluate, screen, and interview candidates at scale.
+</p>
 
-- 📄 **Resume Parsing**: Extract structured data from PDF, DOCX, and TXT resumes
-- 📊 **ATS Scoring**: Calculate ATS compatibility scores against job descriptions
-- 💬 **Interview Questions**: Generate tailored interview questions based on resume and job description
-- 🎤 **Mock Interviews**: Practice with AI-powered interview sessions and answer evaluation
-- 🔊 **Voice Services**: Text-to-speech and speech-to-text capabilities
+---
 
-## Prerequisites
+## 🎯 Why CampusHire.AI? (For Founders & Talent Leaders)
 
-- Python 3.8 or higher
-- Node.js 16 or higher
-- npm or yarn
-- Groq API key from [Groq Console](https://console.groq.com)
+In the modern hiring landscape, traditional ATS (Applicant Tracking Systems) are brittle, and human screening is impossibly slow. **CampusHire.AI** is built to solve the talent bottleneck. 
 
-## Quick Start
+It provides an autonomous, deeply analytical pipeline that bridges the gap between raw candidate applications and final hiring decisions:
+- **For Candidates:** A highly cinematic, real-time environment to parse their resumes, identify competency gaps against actual Job Descriptions, and practice via high-pressure, multi-agent mock interviews.
+- **For Talent Teams:** Eliminates false positives by standardizing behavioral and technical screening. The system's acoustic intelligence and structural parsing surface the strongest candidates dynamically.
 
-### Backend Setup
+---
 
-1. **Run the setup script:**
-   ```bash
-   # On Linux/Mac:
-   chmod +x setup_backend.sh
-   ./setup_backend.sh
-   
-   # On Windows:
-   setup_backend.bat
-   ```
+## ✨ Core Business Solutions
 
-2. **Create `.env` file in project root:**
-   ```env
-   GROQ_API_KEY=your_groq_api_key_here
-   GROQ_MODEL=llama-3.3-70b-versatile
-   DEBUG=True
-   ```
+### 1. 📄 Deep-Parsing ATS Scorer
+*Eliminate keyword guessing and brittle regex filters.*
+- **Structural Token Extraction:** Ingests unstructured PDFs/DOCX files and maps raw career trajectories into a unified, predictable competency matrix.
+- **Dynamic Cross-Referencing:** Evaluates candidate experience directly against live Job Descriptions, generating an actionable match score.
+- **Optimization Vectors:** Pinpoints exact missing competencies and formatting breaks, driving higher quality candidate pipelines.
 
-3. **Start the backend server:**
-   ```bash
-   cd backend
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   uvicorn main:app --reload
-   ```
+### 2. 🛡️ Autonomous Interview Committee
+*Scale your technical and behavioral screening infinitely.*
+- **Multi-Persona Evaluation:** Candidates defend their qualifications against an autonomous panel consisting of a **Technical Lead**, **HR Manager**, and **Domain Expert**.
+- **Targeted Inquiry:** Generates custom, dynamic interview questions mapped to the exact intersection of the candidate's resume and your company's target role.
+- **Real-time Consensus:** Answers are evaluated instantly across multiple dimensions, providing a unified panel verdict, effectively automating the preliminary screening round.
 
-The backend will be available at `http://127.0.0.1:8000`
+### 3. 🎙️ Acoustic Voice Studio
+*Behavioral analytics powered by voice telemetry.*
+- **Vocal Telemetry:** Measures pacing (WPM), filler word density, and pause ratios to gauge candidate confidence and communication clarity.
+- **Speech-to-Text Analytics:** Live transcription feeds mapped directly to evaluation endpoints for verifiable behavioral analysis.
 
-### Frontend Setup
+---
 
-1. **Run the setup script:**
-   ```bash
-   # On Linux/Mac:
-   chmod +x setup_frontend.sh
-   ./setup_frontend.sh
-   
-   # On Windows:
-   setup_frontend.bat
-   ```
+## 🛠️ Technology Stack & Architecture
 
-2. **Create `.env` file in frontend directory (if not auto-created):**
-   ```env
-   VITE_API_URL=http://127.0.0.1:8000
-   ```
+Built for scale, speed, and absolute resilience. 
 
-3. **Start the frontend development server:**
-   ```bash
-   cd frontend
-   npm run dev
-   ```
+### Frontend: Cinematic React Interface
+- **Core:** React 18 powered by Vite for instant HMR and optimized build compilation.
+- **Styling:** CSS Modules paired with a bespoke foundational token system (`_tokens.css`), enabling dynamic theme switching (Dark/Light mode) without the overhead of bloated component libraries.
+- **Animations:** Framer Motion drives fluid, cinematic transitions and micro-animations, while custom decoupling hooks manage terminal-style typing feeds securely.
+- **Layout Architecture:** A custom **Dual-Zone System** splits the screen into a 60% Primary Workspace and a 40% Persistent Intelligence Panel, ensuring contextual telemetry is always visible to the user.
 
-The frontend will be available at `http://localhost:5173` (or the port shown in terminal)
+### Backend: High-Performance Python API
+- **Core Engine:** FastAPI provides asynchronous request handling, achieving massive concurrency for I/O bound LLM network calls.
+- **Data Validation:** Pydantic strictly enforces JSON schemas for both incoming client requests and parsed LLM responses, preventing hallucinated data structures from crashing the pipeline.
+- **Document Processing:** `PyPDF2` and `python-docx` extract raw text in-memory from user uploads before injecting them into the AI context window.
+- **Telemetry Middleware:** Custom API interceptors track system latency and LLM payload sizes across all routes.
 
-## Manual Setup
+### Artificial Intelligence & Voice
+- **Inference Engine:** [Groq](https://groq.com) acts as the neural backbone. By utilizing their proprietary LPU (Language Processing Unit), the system achieves sub-second response times on the `llama-3.3-70b-versatile` model, enabling real-time conversational agents.
+- **Multi-Agent Simulation:** The backend employs advanced role-prompting to instantiate distinct "Personas" that evaluate a single candidate answer from multiple distinct angles simultaneously.
+- **Acoustic Intelligence:** Browser-native `MediaRecorder` captures WebM audio, which is processed via Speech-to-Text (STT) integrations to calculate confidence metrics like WPM, pause ratios, and filler word density.
 
-### Backend
+---
 
-1. Create virtual environment:
-   ```bash
-   python -m venv backend/venv
-   source backend/venv/bin/activate  # On Windows: backend\venv\Scripts\activate
-   ```
+## 🚀 Deployment & Quick Start
 
-2. Install dependencies:
-   ```bash
-   cd backend
-   pip install -r requirements.txt
-   ```
+Get the intelligence engine running locally or deploy it to production in minutes.
 
-3. Create `.env` file in project root with your Groq API key
+### Prerequisites
+* Python 3.8+
+* Node.js 16+
+* [Groq API Key](https://console.groq.com)
 
-4. Start server:
-   ```bash
-   uvicorn main:app --reload
-   ```
-
-### Frontend
-
-1. Install dependencies:
-   ```bash
-   cd frontend
-   npm install
-   ```
-
-2. Create `.env` file with `VITE_API_URL=http://127.0.0.1:8000`
-
-3. Start development server:
-   ```bash
-   npm run dev
-   ```
-
-## API Endpoints
-
-### Resume
-- `POST /api/resume/upload` - Upload and parse a resume
-- `POST /api/resume/score` - Get ATS score for a resume
-- `POST /api/resume/feedback` - Get improvement feedback
-
-### Interview
-- `POST /api/interview/questions` - Generate interview questions
-- `POST /api/interview/evaluate` - Evaluate an interview answer
-
-### Voice
-- `POST /api/voice/tts` - Text-to-speech
-- `POST /api/voice/stt` - Speech-to-text
-- `GET /api/voice/voices` - List available voices
-
-### Health
-- `GET /health` - Health check endpoint
-
-## Project Structure
-
-```
-CAMPUSHIRE.AI2/
-├── backend/
-│   ├── api/           # API route handlers
-│   ├── services/      # Business logic (parsing, scoring, etc.)
-│   ├── models/        # Pydantic schemas
-│   ├── data/          # Data files (skills.json, sample resumes)
-│   └── main.py        # FastAPI application entry point
-├── frontend/
-│   ├── src/
-│   │   ├── pages/     # React page components
-│   │   ├── components/# Reusable components
-│   │   └── lib/        # API client and utilities
-│   └── package.json
-└── .env               # Backend environment variables
-```
-
-## Troubleshooting
-
-### Backend Issues
-
-1. **"GROQ_API_KEY is not set"**
-   - Ensure `.env` file exists in project root
-   - Check that `GROQ_API_KEY` is set correctly
-
-2. **Import errors**
-   - Ensure virtual environment is activated
-   - Run: `pip install -r requirements.txt`
-
-3. **Groq rate limits**
-   - Free tier: 14,400 requests/day, 30 requests/min
-   - Check usage at [console.groq.com/settings/usage](https://console.groq.com/settings/usage)
-
-### Frontend Issues
-
-1. **Cannot connect to backend**
-   - Check `VITE_API_URL` in `frontend/.env`
-   - Ensure backend is running on the specified port
-   - Check CORS settings in backend
-
-2. **API calls failing**
-   - Check browser console for errors
-   - Verify backend is running and accessible
-   - Check network tab for request/response details
-
-## Development
-
-### Running Tests
+### 1. Initialize the Backend (FastAPI)
 
 ```bash
+# 1. Navigate to the backend
 cd backend
-pytest
-```
 
-### Code Formatting
+# 2. Create and activate a virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# 3. Install core dependencies
+pip install -r requirements.txt
+
+# 4. Configure Environment
+# Create a .env file in the root of the project with:
+# GROQ_API_KEY=your_groq_api_key_here
+
+# 5. Boot the server
+uvicorn main:app --reload
+```
+*The API matrix is now live at `http://127.0.0.1:8000`*
+
+### 2. Initialize the Frontend (React + Vite)
 
 ```bash
-cd backend
-black .
-isort .
+# 1. Navigate to the frontend
+cd frontend
+
+# 2. Install dependencies
+npm install
+
+# 3. Boot the UI
+npm run dev
+```
+*The Workspace is now live at `http://localhost:5173`*
+
+---
+
+## 📡 API Architecture
+
+The backend exposes a clean RESTful interface for seamless integration into existing HR tools.
+
+```mermaid
+graph LR
+    A[Frontend Client] -->|Uploads PDF/Docx| B(FastAPI Router)
+    B --> C{Services Layer}
+    C -->|Extracts Data| D[Resume Parser]
+    C -->|Calculates Fit| E[ATS Scorer]
+    C -->|Prompts LLM| F[Groq API via Llama-3]
+    F --> C
+    C --> B
+    B -->|Returns JSON Telemetry| A
 ```
 
-## License
+| Endpoint | Method | Purpose |
+| :--- | :--- | :--- |
+| `/api/resume/score` | `POST` | Core ATS validation & missing keyword analysis |
+| `/api/interview/questions` | `POST` | Generates targeted behavioral/technical questions |
+| `/api/interview/panel-evaluate` | `POST` | Submits answers to the Multi-Agent panel for scoring |
+| `/api/telemetry` | `GET` | System health, API latency, and uptime metrics |
 
-This project is for educational purposes.
+---
 
-## Support
-
-For issues and questions, please check the troubleshooting section or review the API documentation at `http://127.0.0.1:8000/docs` when the backend is running.
+<p align="center">
+  <i>Redefining Talent Acquisition for the AI Era.</i>
+</p>
