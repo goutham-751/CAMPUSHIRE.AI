@@ -24,6 +24,8 @@ from backend.models.schemas import HealthResponse, ErrorResponse
 from backend.api.resume import router as resume_router
 from backend.api.interview import router as interview_router
 from backend.api.voice import router as voice_router
+from backend.telemetry import get_telemetry_data, record_api_call
+import time
 
 # ── Logging ─────────────────────────────────────────────────────
 logging.basicConfig(
@@ -62,6 +64,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ── Telemetry Middleware ────────────────────────────────────────
+@app.middleware("http")
+async def telemetry_middleware(request: Request, call_next):
+    start_time = time.time()
+    response = await call_next(request)
+    process_time = (time.time() - start_time) * 1000  # ms
+    
+    # Check if it's an LLM-heavy route to simulate token usage
+    is_llm = request.url.path.startswith("/api/resume") or request.url.path.startswith("/api/interview")
+    
+    # Exclude /api/telemetry itself from affecting the latency metrics heavily
+    if request.url.path != "/api/telemetry":
+        record_api_call(process_time, is_llm)
+        
+    return response
+
 # ── Register Routers ───────────────────────────────────────────
 app.include_router(resume_router)
 app.include_router(interview_router)
@@ -91,3 +109,7 @@ async def health_check():
         version=settings.APP_VERSION,
         message="CampusHire.AI backend is running",
     )
+
+@app.get("/api/telemetry", tags=["Health"])
+async def telemetry_endpoint():
+    return get_telemetry_data()

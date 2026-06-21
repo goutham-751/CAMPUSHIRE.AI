@@ -1,0 +1,232 @@
+.uploadPhase, .processingPhase, .resultsPhase {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.header h2 {
+  font-family: var(--font-display);
+  font-size: 32px;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-2);
+}
+
+.header p {
+  color: var(--color-text-tertiary);
+}
+
+.dropzone {
+  border: 2px dashed var(--color-border);
+  border-radius: 12px;
+  padding: var(--space-10);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  cursor: pointer;
+  transition: all var(--duration-fast);
+  background: var(--color-surface);
+}
+
+.dropzone:hover {
+  border-color: var(--color-gold);
+  background: rgba(212, 175, 55, 0.05);
+}
+
+.dropzone.hasFile {
+  border-color: var(--color-neon);
+  background: rgba(0, 229, 204, 0.05);
+}
+
+.filePrompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  color: var(--color-text-secondary);
+}
+
+.fileStatus {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.successIcon {
+  color: var(--color-neon);
+}
+
+.filename {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.filesize {
+  font-size: 14px;
+  color: var(--color-text-tertiary);
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.error {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-crimson);
+  background: rgba(220, 20, 60, 0.1);
+  padding: var(--space-4);
+  border-radius: 8px;
+  border: 1px solid var(--color-crimson);
+}
+
+.feedWrapper {
+  height: 400px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.resultsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.resultsHeader h2 {
+  font-family: var(--font-display);
+  font-size: 32px;
+  color: var(--color-gold);
+}
+
+.detailsPanel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: var(--space-6);
+}
+
+.detailSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-ui);
+  font-size: 16px;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: var(--space-2);
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.list li {
+  position: relative;
+  padding-left: var(--space-4);
+  color: var(--color-text-primary);
+  line-height: 1.5;
+}
+
+.list li::before {
+  content: '>';
+  position: absolute;
+  left: 0;
+  color: var(--color-gold);
+  font-family: var(--font-mono);
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.tag {
+  background: rgba(220, 20, 60, 0.1);
+  color: var(--color-crimson);
+  border: 1px solid var(--color-crimson);
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+/* Zone B additions */
+.scoreDialWrapper {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-4) 0;
+}
+
+.telemetryBreakdown {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.tRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tRow:last-child {
+  border-bottom: none;
+}
+
+.tRow span {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.tRow .tVal {
+  font-family: var(--font-mono);
+  color: var(--color-neon);
+  font-weight: 600;
+}
+
+.gapList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.gapItem {
+  background-color: rgba(220, 20, 60, 0.1);
+  border-left: 2px solid var(--color-crimson);
+  padding: var(--space-2) var(--space-3);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-text-primary);
+}

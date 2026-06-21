@@ -7,7 +7,7 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
 const api = axios.create({
     baseURL: API_BASE,
-    timeout: 120000,
+    timeout: 180000,
     headers: { 'Accept': 'application/json' },
 });
 
@@ -30,11 +30,20 @@ api.interceptors.response.use(
         return response.data;
     },
     (error) => {
+        // Handle token expiration
+        if (error.response?.status === 401) {
+            localStorage.removeItem('campushire-token');
+            return Promise.reject(new Error("Session expired. Please log in again."));
+        }
+
         // Handle timeout or Render cold start proxy errors
         if (error.code === 'ECONNABORTED' || error.response?.status === 502 || error.response?.status === 504 || error.message?.includes('timeout')) {
             return Promise.reject(new Error("The server is waking up or taking too long to respond. Please wait a moment and try again."));
         }
-        const message = error.response?.data?.detail || error.response?.data?.error || error.message;
+        let message = error.response?.data?.detail || error.response?.data?.error || error.message;
+        if (typeof message === 'object') {
+            message = JSON.stringify(message);
+        }
         return Promise.reject(new Error(message));
     },
 );
@@ -129,9 +138,10 @@ export const voiceApi = {
     getVoices: () => api.get('/api/voice/voices'),
 };
 
-// ── Health ────────────────────────────────────────────────────
+// ── Health & Telemetry ────────────────────────────────────────
 export const healthApi = {
     check: () => api.get('/health'),
+    getTelemetry: () => api.get('/api/telemetry'),
 };
 
 export default api;

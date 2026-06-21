@@ -1,0 +1,78 @@
+.card {
+  background-color: var(--color-black);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 100%;
+  background-color: var(--color-border);
+}
+
+.card.nominal::before { background-color: var(--color-neon); }
+.card.warning::before { background-color: var(--color-gold); }
+.card.critical::before { background-color: var(--color-crimson); }
+.card.active::before { background-color: var(--color-plasma); }
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+}
+
+.titleArea {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.icon {
+  color: var(--color-text-tertiary);
+}
+
+.title {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.statusIndicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--color-border);
+}
+
+.card.nominal .statusIndicator { background-color: var(--color-neon); box-shadow: 0 0 8px var(--color-neon); }
+.card.warning .statusIndicator { background-color: var(--color-gold); box-shadow: 0 0 8px var(--color-gold); }
+.card.critical .statusIndicator { background-color: var(--color-crimson); box-shadow: 0 0 8px var(--color-crimson); }
+.card.active .statusIndicator { 
+  background-color: var(--color-plasma); 
+  box-shadow: 0 0 8px var(--color-plasma); 
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+.content {
+  padding: var(--space-4);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--color-text-primary);
+}

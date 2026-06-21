@@ -1,0 +1,15 @@
+.feed {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-neon);
+  white-space: pre-wrap;
+}
+
+.cursor {
+  display: inline-block;
+  width: 8px;
+  animation: typewriter-cursor 1s infinite;
+  color: var(--color-gold);
+  margin-left: 2px;
+}

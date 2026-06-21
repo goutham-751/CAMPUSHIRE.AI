@@ -1,0 +1,187 @@
+.header h2 {
+  font-family: var(--font-display);
+  font-size: 32px;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-2);
+}
+
+.header p {
+  color: var(--color-text-tertiary);
+}
+
+.setupPanel, .runningPhase, .summaryPhase {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: var(--space-6);
+}
+
+.dropzone {
+  border: 1px dashed var(--color-border);
+  border-radius: 8px;
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+  transition: all var(--duration-fast);
+  background: var(--color-black);
+}
+
+.dropzone:hover {
+  border-color: var(--color-gold);
+}
+
+.dropzone.hasFile {
+  border-color: var(--color-neon);
+}
+
+.filePrompt, .fileStatus {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.successIcon {
+  color: var(--color-neon);
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.qPanel {
+  background: var(--color-black);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.qHeader {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: var(--space-2);
+}
+
+.qNum {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--color-gold);
+}
+
+.questionText {
+  font-family: var(--font-display);
+  font-size: 20px;
+  line-height: 1.4;
+  color: var(--color-text-primary);
+  margin-top: var(--space-2);
+}
+
+.waveformArea {
+  height: 200px;
+  background: var(--color-black);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.controls {
+  display: flex;
+  justify-content: center;
+}
+
+.evalTop {
+  display: flex;
+  gap: var(--space-6);
+  align-items: center;
+  margin-bottom: var(--space-6);
+}
+
+.evalFeedback {
+  flex: 1;
+}
+
+.evalFeedback h4 {
+  font-family: var(--font-ui);
+  text-transform: uppercase;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-2);
+}
+
+.evalFeedback p {
+  font-size: 16px;
+  color: var(--color-text-primary);
+  line-height: 1.5;
+}
+
+.actionsRight {
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-4);
+}
+
+/* Zone B additions */
+.telemetryGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.tItem {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.tItem span {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+}
+
+.tItem strong {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  color: var(--color-text-primary);
+}
+
+.textNeon { color: var(--color-neon) !important; }
+.textPlasma { color: var(--color-plasma) !important; }
+.textCrimson { color: var(--color-crimson) !important; }
+
+.transcriptLog {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-text-primary);
+  line-height: 1.6;
+  max-height: 150px;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.2);
+  padding: var(--space-3);
+  border-radius: 4px;
+  border-left: 2px solid var(--color-neon);
+}

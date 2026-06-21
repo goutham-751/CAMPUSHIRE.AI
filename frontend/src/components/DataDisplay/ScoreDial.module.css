@@ -1,0 +1,61 @@
+.scoreDial {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.svg {
+  position: absolute;
+  top: 0; left: 0;
+  transform: rotate(-90deg);
+}
+
+.bgCircle {
+  fill: none;
+  stroke: var(--color-border);
+  stroke-width: 4px;
+}
+
+.progressCircle {
+  fill: none;
+  stroke-width: 4px;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 100ms linear;
+  filter: drop-shadow(0 0 10px rgba(201, 168, 76, 0.4));
+}
+
+.content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+}
+
+.scoreWrapper {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+}
+
+.score {
+  font-family: var(--font-display);
+  font-size: 64px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.max {
+  font-family: var(--font-ui);
+  font-size: 16px;
+  color: var(--color-text-tertiary);
+  margin-left: 4px;
+}
+
+.label {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-text-secondary);
+  margin-top: 8px;
+}

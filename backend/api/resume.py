@@ -89,8 +89,8 @@ async def upload_resume(file: UploadFile = File(...)):
 )
 async def score_resume(
     file: UploadFile = File(...),
-    job_title: str = Form(...),
-    company_name: str = Form(...),
+    job_title: str = Form(default=""),
+    company_name: str = Form(default=""),
     job_description: str = Form(...),
 ):
     _validate_file(file)
@@ -139,8 +139,8 @@ async def score_resume(
 )
 async def get_feedback(
     file: UploadFile = File(...),
-    job_title: str = Form(...),
-    company_name: str = Form(...),
+    job_title: str = Form(default=""),
+    company_name: str = Form(default=""),
     job_description: str = Form(...),
 ):
     _validate_file(file)

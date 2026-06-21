@@ -1,242 +1,136 @@
 import { useMemo } from 'react';
-import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
-import {
-    FileText, BarChart3, MessageSquare, Mic, TrendingUp,
-    Clock, Star, ArrowRight, Award, Target
-} from 'lucide-react';
-import Card from '../../components/Card/Card';
-import Button from '../../components/Button/Button';
+import { useNavigate } from 'react-router-dom';
+import { Activity, Clock, Target } from 'lucide-react';
 import { getHistory } from '../../lib/api';
-import {
-    AreaChart, Area, ResponsiveContainer, Tooltip, XAxis, YAxis,
-    BarChart, Bar, Cell
-} from 'recharts';
-import './Dashboard.css';
+import DualZone, { ZoneA, ZoneB } from '../../components/Layout/DualZone';
+import TelemetryCard from '../../components/Cards/TelemetryCard';
+import { useTelemetry } from '../../hooks/useTelemetry';
+import styles from './Dashboard.module.css';
 
-const ICON_MAP = {
-    FileText, BarChart3, MessageSquare, Mic, TrendingUp, Award, Target
-};
-
-function getIcon(name) {
-    return ICON_MAP[name] || FileText;
-}
-
-const CATEGORY_COLORS = {
-    skills_match: '#6366f1',
-    experience_level: '#8b5cf6',
-    education: '#06b6d4',
-    keyword_density: '#10b981',
-    formatting: '#f59e0b',
-    achievements: '#ef4444',
-};
-
-const CATEGORY_NAMES = {
-    skills_match: 'Skills',
-    experience_level: 'Experience',
-    education: 'Education',
-    keyword_density: 'Keywords',
-    formatting: 'Formatting',
-    achievements: 'Achievements',
-};
-
-/* ── Stat Card ────────────────────────────────────────────── */
-function StatCard({ icon: Icon, label, value, sub, color, to }) {
-    return (
-        <Link to={to} style={{ textDecoration: 'none' }}>
-            <Card variant="glass" className="dash-stat">
-                <div className="dash-stat__icon" style={{ background: `${color}18`, color }}>
-                    <Icon size={22} />
-                </div>
-                <div className="dash-stat__info">
-                    <span className="dash-stat__value">{value}</span>
-                    <span className="dash-stat__label">{label}</span>
-                    {sub && <span className="dash-stat__sub">{sub}</span>}
-                </div>
-            </Card>
-        </Link>
-    );
-}
-
-/* ── Main Dashboard ───────────────────────────────────────── */
 export default function Dashboard() {
-    const history = useMemo(() => getHistory(), []);
+  const navigate = useNavigate();
+  const history = useMemo(() => getHistory(), []);
+  const telemetry = useTelemetry(3000);
 
-    // Compute real stats
-    const resumeCount = history.filter(h => h.type === 'resume_parsed' || h.type === 'ats_score' || h.type === 'feedback').length;
-    const atsScores = history.filter(h => h.type === 'ats_score' && h.score != null);
-    const avgAts = atsScores.length > 0
-        ? Math.round(atsScores.reduce((sum, h) => sum + h.score, 0) / atsScores.length)
-        : 0;
-    const lastAts = atsScores.length > 0 ? Math.round(atsScores[0].score) : null;
-    const interviewCount = history.filter(h => h.type === 'interview_questions' || h.type === 'answer_evaluated').length;
+  const atsScores = history.filter(h => h.type === 'ats_score' && h.score != null);
+  const lastAts = atsScores.length > 0 ? Math.round(atsScores[0].score) : null;
+  
+  return (
+    <DualZone>
+      <ZoneA>
+        <div className={styles.greetingZone}>
+          <h2 className={styles.greeting}>Good evening.</h2>
+          <p className={styles.greetingSub}>Your AI intelligence system is ready.</p>
+        </div>
 
-    // Score history chart data (most recent 10)
-    const scoreChartData = atsScores.slice(0, 10).reverse().map((h, i) => ({
-        name: new Date(h.timestamp).toLocaleDateString('en', { month: 'short', day: 'numeric' }),
-        score: Math.round(h.score),
-    }));
-
-    // Category breakdown from most recent ATS score
-    const latestScores = atsScores.length > 0 ? atsScores[0].scores : null;
-    const categoryData = latestScores
-        ? Object.entries(latestScores).map(([key, val]) => ({
-            name: CATEGORY_NAMES[key] || key,
-            score: Math.round(val),
-            fill: CATEGORY_COLORS[key] || '#6366f1',
-        }))
-        : null;
-
-    // Recent activity (last 8)
-    const recentActivity = history.slice(0, 8);
-
-    const hasData = history.length > 0;
-
-    return (
-        <motion.div
-            className="dashboard"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-        >
-            <div className="dashboard__welcome">
-                <h2>Welcome back 👋</h2>
-                <p className="dashboard__subtitle">
-                    {hasData
-                        ? `You've completed ${resumeCount} analysis session${resumeCount !== 1 ? 's' : ''} so far.`
-                        : 'Get started by analyzing your resume or practicing for an interview.'}
-                </p>
+        <div className={styles.missionSurface}>
+          <div 
+            className={`${styles.missionTile} ${styles.tileResume}`}
+            onClick={() => navigate('/app/resume')}
+          >
+            <div className={styles.tileContent}>
+              {lastAts ? (
+                <div className={styles.tileScore}>
+                  <span className={styles.scoreNum}>{lastAts}</span>
+                  <span className={styles.scoreMax}>/100</span>
+                </div>
+              ) : (
+                <div className={styles.tileIcon}>◎</div>
+              )}
+              <div className={styles.tileAction}>Analyze Resume →</div>
             </div>
+          </div>
 
-            {/* ── Stats ──────────────────────────────────────── */}
-            <div className="dashboard__stats">
-                <StatCard icon={FileText} label="Resumes Analyzed" value={resumeCount} color="#6366f1" to="/app/resume" />
-                <StatCard icon={BarChart3} label="Avg ATS Score" value={avgAts > 0 ? `${avgAts}%` : '—'} sub={lastAts != null ? `Last: ${lastAts}%` : null} color="#10b981" to="/app/resume" />
-                <StatCard icon={MessageSquare} label="Interview Sessions" value={interviewCount} color="#8b5cf6" to="/app/interview" />
-                <StatCard icon={Mic} label="Voice Practice" value="—" color="#06b6d4" to="/app/voice" />
+          <div 
+            className={`${styles.missionTile} ${styles.tileInterview}`}
+            onClick={() => navigate('/app/interview')}
+          >
+            <div className={styles.tileContent}>
+              <div className={styles.agentAvatars}>
+                <div className={`${styles.avatarGlow} ${styles.neon}`}></div>
+                <div className={`${styles.avatarGlow} ${styles.plasma}`}></div>
+                <div className={`${styles.avatarGlow} ${styles.gold}`}></div>
+              </div>
+              <div className={styles.tileAction}>Practice Interview →</div>
             </div>
+          </div>
 
-            {/* ── Charts + Activity ──────────────────────────── */}
-            <div className="dashboard__grid">
-                {/* Score Trend */}
-                <Card variant="glass" className="dashboard__chart-card">
-                    <h3><TrendingUp size={18} /> Score Trend</h3>
-                    {scoreChartData.length > 1 ? (
-                        <ResponsiveContainer width="100%" height={220}>
-                            <AreaChart data={scoreChartData}>
-                                <defs>
-                                    <linearGradient id="scoreGrad" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
-                                        <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <XAxis dataKey="name" tick={{ fontSize: 11 }} stroke="var(--color-text-tertiary)" />
-                                <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} stroke="var(--color-text-tertiary)" />
-                                <Tooltip contentStyle={{ background: 'var(--color-bg-secondary)', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '0.82rem' }} />
-                                <Area type="monotone" dataKey="score" stroke="#6366f1" strokeWidth={2} fill="url(#scoreGrad)" />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    ) : (
-                        <div className="dashboard__chart-empty">
-                            <TrendingUp size={36} color="var(--color-text-tertiary)" />
-                            <p>Run ATS Score analysis to see your score trend here.</p>
-                        </div>
-                    )}
-                </Card>
-
-                {/* Category Breakdown */}
-                <Card variant="glass" className="dashboard__chart-card">
-                    <h3><BarChart3 size={18} /> Category Breakdown</h3>
-                    {categoryData ? (
-                        <ResponsiveContainer width="100%" height={220}>
-                            <BarChart data={categoryData} layout="vertical" margin={{ left: 10 }}>
-                                <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11 }} stroke="var(--color-text-tertiary)" />
-                                <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} stroke="var(--color-text-tertiary)" width={80} />
-                                <Tooltip contentStyle={{ background: 'var(--color-bg-secondary)', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '0.82rem' }} />
-                                <Bar dataKey="score" radius={[0, 4, 4, 0]} barSize={14}>
-                                    {categoryData.map((entry, i) => (
-                                        <Cell key={i} fill={entry.fill} />
-                                    ))}
-                                </Bar>
-                            </BarChart>
-                        </ResponsiveContainer>
-                    ) : (
-                        <div className="dashboard__chart-empty">
-                            <BarChart3 size={36} color="var(--color-text-tertiary)" />
-                            <p>ATS Score results will show category breakdown here.</p>
-                        </div>
-                    )}
-                </Card>
-
-                {/* Activity Feed */}
-                <Card variant="glass" className="dashboard__activity-card">
-                    <h3><Clock size={18} /> Recent Activity</h3>
-                    {recentActivity.length > 0 ? (
-                        <div className="dashboard__activity-list">
-                            {recentActivity.map((item, i) => {
-                                const Icon = getIcon(item.icon);
-                                const timeAgo = getTimeAgo(item.timestamp);
-                                return (
-                                    <motion.div
-                                        key={i}
-                                        className="dashboard__activity-item"
-                                        initial={{ opacity: 0, x: -10 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: i * 0.05 }}
-                                    >
-                                        <div className="dashboard__activity-icon">
-                                            <Icon size={14} />
-                                        </div>
-                                        <div className="dashboard__activity-info">
-                                            <span className="dashboard__activity-text">{item.text}</span>
-                                            <span className="dashboard__activity-time">{timeAgo}</span>
-                                        </div>
-                                    </motion.div>
-                                );
-                            })}
-                        </div>
-                    ) : (
-                        <div className="dashboard__chart-empty">
-                            <Clock size={36} color="var(--color-text-tertiary)" />
-                            <p>Your activity will appear here as you use the app.</p>
-                        </div>
-                    )}
-                </Card>
-
-                {/* Quick Actions */}
-                <Card variant="glass" className="dashboard__actions-card">
-                    <h3><Star size={18} /> Quick Actions</h3>
-                    <div className="dashboard__actions-list">
-                        <Link to="/app/resume">
-                            <Button variant="primary" size="sm" icon={FileText} fullWidth>
-                                Analyze Resume
-                            </Button>
-                        </Link>
-                        <Link to="/app/interview">
-                            <Button variant="secondary" size="sm" icon={MessageSquare} fullWidth>
-                                Mock Interview
-                            </Button>
-                        </Link>
-                        <Link to="/app/voice">
-                            <Button variant="secondary" size="sm" icon={Mic} fullWidth>
-                                Voice Practice
-                            </Button>
-                        </Link>
-                    </div>
-                </Card>
+          <div 
+            className={`${styles.missionTile} ${styles.tileVoice}`}
+            onClick={() => navigate('/app/voice')}
+          >
+            <div className={styles.tileContent}>
+              <div className={styles.miniWaveform}>
+                <div className={styles.waveBar} style={{ height: '40%' }}></div>
+                <div className={styles.waveBar} style={{ height: '80%' }}></div>
+                <div className={styles.waveBar} style={{ height: '60%' }}></div>
+                <div className={styles.waveBar} style={{ height: '100%' }}></div>
+                <div className={styles.waveBar} style={{ height: '50%' }}></div>
+              </div>
+              <div className={styles.tileAction}>Speak →</div>
             </div>
-        </motion.div>
-    );
-}
+          </div>
+        </div>
+      </ZoneA>
 
-/* ── Helper ───────────────────────────────────────────────── */
-function getTimeAgo(timestamp) {
-    const diff = Date.now() - new Date(timestamp).getTime();
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1) return 'Just now';
-    if (mins < 60) return `${mins}m ago`;
-    const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `${hrs}h ago`;
-    const days = Math.floor(hrs / 24);
-    return `${days}d ago`;
+      <ZoneB>
+        <TelemetryCard title="System Health" icon={Activity} status={telemetry.status === 'Active' ? 'nominal' : 'warning'}>
+          <div className={styles.telemetryGrid}>
+            <div className={styles.tItem}>
+              <span>API Latency</span>
+              <strong className={styles.textNeon}>{telemetry.api_latency_ms}ms</strong>
+            </div>
+            <div className={styles.tItem}>
+              <span>Agent Status</span>
+              <strong className={styles.textNeon}>{telemetry.status}</strong>
+            </div>
+            <div className={styles.tItem}>
+              <span>Token Usage</span>
+              <strong>{telemetry.total_tokens >= 1000 ? (telemetry.total_tokens / 1000).toFixed(1) + 'k' : telemetry.total_tokens}</strong>
+            </div>
+            <div className={styles.tItem}>
+              <span>Session Uptime</span>
+              <strong>{telemetry.uptime}</strong>
+            </div>
+          </div>
+        </TelemetryCard>
+
+        <TelemetryCard title="Activity Timeline" icon={Clock} status="nominal">
+          <div className={styles.timeline}>
+            {history.slice(0, 5).map((h, i) => (
+              <div key={i} className={styles.timelineItem}>
+                <div className={styles.timelineDot}></div>
+                <div className={styles.timelineContent}>
+                  <div className={styles.tTime}>{new Date(h.timestamp).toLocaleTimeString()}</div>
+                  <div className={styles.tAction}>{h.text || h.type}</div>
+                </div>
+              </div>
+            ))}
+            {history.length === 0 && (
+              <div className={styles.timelineItem}>
+                <div className={styles.timelineDot}></div>
+                <div className={styles.timelineContent}>
+                  <div className={styles.tAction}>System initialized.</div>
+                </div>
+              </div>
+            )}
+          </div>
+        </TelemetryCard>
+
+        <TelemetryCard title="Global Skill Radar" icon={Target} status="active">
+          <div className={styles.radarContainer}>
+            <div className={styles.radarRings}>
+              <div className={styles.ring}></div>
+              <div className={styles.ring}></div>
+              <div className={styles.ring}></div>
+              <div className={styles.radarLine} style={{ transform: 'rotate(0deg)' }}></div>
+              <div className={styles.radarLine} style={{ transform: 'rotate(60deg)' }}></div>
+              <div className={styles.radarLine} style={{ transform: 'rotate(120deg)' }}></div>
+              <div className={styles.radarSweep}></div>
+            </div>
+          </div>
+        </TelemetryCard>
+      </ZoneB>
+    </DualZone>
+  );
 }

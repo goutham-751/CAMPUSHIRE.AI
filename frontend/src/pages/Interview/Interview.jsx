@@ -1,288 +1,303 @@
-import { useState, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, MessageSquare, Send, Loader2, CheckCircle, AlertCircle, HelpCircle, TrendingUp, Target, Users } from 'lucide-react';
-import Card from '../../components/Card/Card';
-import Button from '../../components/Button/Button';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { Upload, MessageSquare, Users, CheckCircle, AlertCircle, Target, TrendingUp, Activity, Clock, Shield } from 'lucide-react';
+import Button from '../../components/ui/Button/Button';
+import Input from '../../components/ui/Input/Input';
+import AgentCard from '../../components/Cards/AgentCard';
+import IntelligenceFeed from '../../components/Feedback/IntelligenceFeed';
+import DualZone, { ZoneA, ZoneB } from '../../components/Layout/DualZone';
+import TelemetryCard from '../../components/Cards/TelemetryCard';
 import { interviewApi, trackActivity } from '../../lib/api';
-import './Interview.css';
+import styles from './Interview.module.css';
 
-/* ── Score Ring (small version) ───────────────────────────── */
-function ScoreRing({ score, size = 80 }) {
-    const radius = (size - 8) / 2;
-    const circ = 2 * Math.PI * radius;
-    const progress = (score / 100) * circ;
-    const color = score >= 80 ? '#10b981' : score >= 60 ? '#f59e0b' : '#ef4444';
-
-    return (
-        <div className="eval-ring" style={{ width: size, height: size }}>
-            <svg viewBox={`0 0 ${size} ${size}`}>
-                <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="var(--color-border)" strokeWidth="6" />
-                <circle cx={size / 2} cy={size / 2} r={radius} fill="none"
-                    stroke={color} strokeWidth="6" strokeLinecap="round"
-                    strokeDasharray={circ} strokeDashoffset={circ - progress}
-                    transform={`rotate(-90 ${size / 2} ${size / 2})`}
-                    style={{ transition: 'stroke-dashoffset 1s ease' }}
-                />
-            </svg>
-            <span className="eval-ring__value" style={{ color }}>{Math.round(score)}</span>
-        </div>
-    );
-}
-
-/* ── Panel Evaluation Result (Multi-Agent) ────────────────── */
-function PanelEvalResult({ data }) {
-    if (!data) return null;
-    const verdictColor = {
-        'Strong Hire': '#10b981', 'Hire': '#10b981', 'Lean Hire': '#f59e0b',
-        'Lean No Hire': '#ef4444', 'No Hire': '#ef4444', 'Needs Review': '#6366f1',
-    };
-    return (
-        <motion.div className="panel-eval" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-            {/* Aggregated Score */}
-            <div className="panel-eval__aggregate">
-                <ScoreRing score={data.aggregated_score || 0} />
-                <div className="panel-eval__aggregate-info">
-                    <span className="panel-eval__verdict-badge" style={{
-                        background: `${verdictColor[data.overall_verdict] || '#6366f1'}20`,
-                        color: verdictColor[data.overall_verdict] || '#6366f1',
-                        border: `1px solid ${verdictColor[data.overall_verdict] || '#6366f1'}40`
-                    }}>
-                        {data.overall_verdict || 'Panel Verdict'}
-                    </span>
-                    <p className="panel-eval__recommendation">{data.final_recommendation}</p>
-                </div>
-            </div>
-
-            {/* Agent Cards */}
-            <div className="panel-eval__agents">
-                {(data.agents || []).map((agent, i) => (
-                    <motion.div
-                        key={agent.agent_id}
-                        className="agent-card"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.15 }}
-                        style={{ '--agent-color': agent.agent_color }}
-                    >
-                        <div className="agent-card__header">
-                            <div className="agent-card__avatar" style={{ background: `${agent.agent_color}20`, color: agent.agent_color }}>
-                                {agent.agent_emoji}
-                            </div>
-                            <div className="agent-card__info">
-                                <strong>{agent.agent_name}</strong>
-                                <span className="agent-card__role">{agent.agent_role}</span>
-                            </div>
-                            <div className="agent-card__score" style={{ color: agent.score >= 80 ? '#10b981' : agent.score >= 60 ? '#f59e0b' : '#ef4444' }}>
-                                {Math.round(agent.score)}
-                            </div>
-                        </div>
-                        <p className="agent-card__verdict">{agent.verdict}</p>
-                        {agent.key_observation && (
-                            <div className="agent-card__observation">
-                                <span>💡</span> {agent.key_observation}
-                            </div>
-                        )}
-                        {agent.strengths?.length > 0 && (
-                            <div className="agent-card__section">
-                                <h6><TrendingUp size={12} /> Strengths</h6>
-                                <ul>{agent.strengths.map((s, j) => <li key={j}><CheckCircle size={11} /> {s}</li>)}</ul>
-                            </div>
-                        )}
-                        {agent.improvements?.length > 0 && (
-                            <div className="agent-card__section">
-                                <h6><Target size={12} /> Improve</h6>
-                                <ul>{agent.improvements.map((s, j) => <li key={j}><AlertCircle size={11} /> {s}</li>)}</ul>
-                            </div>
-                        )}
-                    </motion.div>
-                ))}
-            </div>
-
-            {/* Debate Summary */}
-            {(data.consensus || data.disagreements) && (
-                <div className="panel-eval__debate">
-                    {data.consensus && (
-                        <div className="panel-eval__debate-item">
-                            <CheckCircle size={14} color="#10b981" />
-                            <div><strong>Consensus:</strong> {data.consensus}</div>
-                        </div>
-                    )}
-                    {data.disagreements && data.disagreements !== 'None — unanimous assessment' && (
-                        <div className="panel-eval__debate-item">
-                            <AlertCircle size={14} color="#f59e0b" />
-                            <div><strong>Disagreements:</strong> {data.disagreements}</div>
-                        </div>
-                    )}
-                </div>
-            )}
-        </motion.div>
-    );
-}
-
-/* ── Main Component ───────────────────────────────────────── */
 export default function Interview() {
-    const [file, setFile] = useState(null);
-    const [jobTitle, setJobTitle] = useState('');
-    const [company, setCompany] = useState('');
-    const [jobDesc, setJobDesc] = useState('');
-    const [questions, setQuestions] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+  const [phase, setPhase] = useState('SETUP');
+  const [file, setFile] = useState(null);
+  const [jobTitle, setJobTitle] = useState('');
+  const [jobDesc, setJobDesc] = useState('');
+  const [questions, setQuestions] = useState(null);
+  const [activeQIndex, setActiveQIndex] = useState(0);
+  const [feedComplete, setFeedComplete] = useState(false);
+  const [answer, setAnswer] = useState('');
+  const [evalResult, setEvalResult] = useState(null);
+  const [evalLoading, setEvalLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const fileRef = useRef(null);
 
-    // Answer evaluation
-    const [activeQ, setActiveQ] = useState(null);
-    const [answer, setAnswer] = useState('');
-    const [evalResult, setEvalResult] = useState(null);
-    const [evalLoading, setEvalLoading] = useState(false);
-    const fileRef = useRef(null);
+  const handleDrop = (e) => {
+    e.preventDefault();
+    const f = e.dataTransfer?.files?.[0];
+    if (f) setFile(f);
+  };
 
-    const handleGenerate = async () => {
-        if (!file || !jobDesc) return;
-        setLoading(true);
-        setError(null);
-        setQuestions(null);
-        try {
-            const data = await interviewApi.generateQuestions(file, jobTitle, company, jobDesc);
-            setQuestions(data.questions || []);
-            trackActivity({ type: 'interview_questions', text: `Generated ${(data.questions || []).length} interview questions`, icon: 'MessageSquare' });
-        } catch (err) {
-            setError(err.message);
-        } finally {
-            setLoading(false);
-        }
-    };
+  useEffect(() => {
+    if (phase === 'PROCESSING' && questions && feedComplete) {
+      setPhase('INTERVIEW');
+    }
+  }, [phase, questions, feedComplete]);
 
-    const handleEvaluate = async () => {
-        if (!activeQ || !answer) return;
-        setEvalLoading(true);
-        setEvalResult(null);
-        try {
-            const data = await interviewApi.panelEvaluate(activeQ.question || activeQ, answer, jobTitle);
-            setEvalResult(data);
-            trackActivity({ type: 'panel_evaluated', text: `Panel score: ${data.aggregated_score || 0}% — ${data.overall_verdict || 'Reviewed'}`, score: data.aggregated_score, icon: 'TrendingUp' });
-        } catch (err) {
-            setError(err.message);
-        } finally {
-            setEvalLoading(false);
-        }
-    };
+  const handleFeedComplete = useCallback(() => {
+    setFeedComplete(true);
+  }, []);
 
-    const getDifficultyColor = (d) => {
-        if (d === 'easy') return '#10b981';
-        if (d === 'hard') return '#ef4444';
-        return '#f59e0b';
-    };
+  const handleGenerate = async () => {
+    if (!file || !jobDesc) return;
+    setPhase('PROCESSING');
+    setFeedComplete(false);
+    setError(null);
+    try {
+      const data = await interviewApi.generateQuestions(file, jobTitle, '', jobDesc);
+      setQuestions(data.questions || []);
+      trackActivity({ type: 'interview_questions', text: `Generated ${(data.questions || []).length} interview questions`, icon: 'MessageSquare' });
+    } catch (err) {
+      setError(err.message);
+      setPhase('SETUP');
+    }
+  };
 
-    return (
-        <motion.div className="interview-page" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <h2><Users size={24} style={{ marginRight: 8, verticalAlign: 'middle' }} /> AI Hiring Committee</h2>
-            <p className="interview-page__desc">Generate AI-tailored interview questions and get evaluated by a panel of 3 AI agents — Technical Lead, HR Manager & Domain Expert.</p>
+  const handleEvaluate = async () => {
+    if (!questions || !answer) return;
+    setEvalLoading(true);
+    setEvalResult(null);
+    const activeQ = questions[activeQIndex];
+    try {
+      const data = await interviewApi.panelEvaluate(activeQ.question || activeQ, answer, jobTitle);
+      setEvalResult(data);
+      trackActivity({ type: 'panel_evaluated', text: `Panel score: ${data.aggregated_score || 0}%`, score: data.aggregated_score, icon: 'TrendingUp' });
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setEvalLoading(false);
+    }
+  };
 
-            <div className="interview-page__layout">
-                {/* Left: Setup */}
-                <Card variant="glass" className="interview-page__setup">
-                    <h3><HelpCircle size={18} /> Generate Questions</h3>
+  const activeQuestion = questions?.[activeQIndex];
+  const qText = activeQuestion ? (typeof activeQuestion === 'string' ? activeQuestion : activeQuestion.question || activeQuestion.text) : '';
 
-                    <div
-                        className={`interview-page__dropzone ${file ? 'has-file' : ''}`}
-                        onClick={() => fileRef.current?.click()}
-                    >
-                        <input ref={fileRef} type="file" accept=".pdf,.docx,.txt" hidden onChange={(e) => setFile(e.target.files?.[0] || null)} />
-                        {file ? (
-                            <><CheckCircle size={20} color="var(--color-success)" /> <span>{file.name}</span></>
-                        ) : (
-                            <><Upload size={20} /> <span>Upload Resume</span></>
-                        )}
-                    </div>
+  return (
+    <DualZone>
+      <ZoneA>
+        <div className={styles.header}>
+          <h2>Interview Committee</h2>
+          <p>Defend your qualifications against a panel of autonomous AI agents.</p>
+        </div>
 
-                    <input placeholder="Job Title" value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} className="resume-page__input" />
-                    <input placeholder="Company Name" value={company} onChange={(e) => setCompany(e.target.value)} className="resume-page__input" />
-                    <textarea placeholder="Job Description…" value={jobDesc} onChange={(e) => setJobDesc(e.target.value)} className="resume-page__textarea" rows={3} />
-
-                    <Button variant="primary" icon={MessageSquare} loading={loading} onClick={handleGenerate} disabled={!file || !jobDesc} fullWidth>
-                        Generate Questions
-                    </Button>
-                </Card>
-
-                {/* Right: Questions & Evaluation */}
-                <div className="interview-page__content">
-                    <AnimatePresence mode="wait">
-                        {loading && (
-                            <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="interview-page__loader">
-                                <Loader2 size={28} className="resume-page__spinner" />
-                                <p>Generating questions…</p>
-                            </motion.div>
-                        )}
-
-                        {error && (
-                            <motion.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                                <Card variant="glass" className="resume-page__error-card">
-                                    <AlertCircle size={20} color="var(--color-error)" /> <p>{error}</p>
-                                </Card>
-                            </motion.div>
-                        )}
-
-                        {questions && !loading && (
-                            <motion.div key="questions" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="interview-page__questions">
-                                {questions.map((q, i) => {
-                                    const qText = typeof q === 'string' ? q : q.question || q.text || JSON.stringify(q);
-                                    const isActive = activeQ === q;
-                                    return (
-                                        <Card
-                                            key={i}
-                                            variant={isActive ? 'gradient' : 'glass'}
-                                            className={`interview-page__q-card ${isActive ? 'active' : ''}`}
-                                            onClick={() => { setActiveQ(q); setAnswer(''); setEvalResult(null); }}
-                                            hover
-                                        >
-                                            <div className="interview-page__q-top">
-                                                <div className="interview-page__q-num">Q{i + 1}</div>
-                                                <div className="interview-page__q-badges">
-                                                    {q.category && <span className="interview-page__q-tag">{q.category}</span>}
-                                                    {q.difficulty && (
-                                                        <span className="interview-page__q-difficulty" style={{ color: getDifficultyColor(q.difficulty), borderColor: getDifficultyColor(q.difficulty) }}>
-                                                            {q.difficulty}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                            <p>{qText}</p>
-                                        </Card>
-                                    );
-                                })}
-
-                                {/* Answer box */}
-                                {activeQ && (
-                                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="interview-page__answer-section">
-                                        <Card variant="glass" className="interview-page__answer-card">
-                                            <h4>Your Answer</h4>
-                                            <textarea
-                                                value={answer}
-                                                onChange={(e) => setAnswer(e.target.value)}
-                                                placeholder="Type your answer here…"
-                                                className="resume-page__textarea"
-                                                rows={5}
-                                            />
-                                            <Button variant="primary" size="sm" icon={Users} loading={evalLoading} onClick={handleEvaluate} disabled={!answer}>
-                                                Evaluate with AI Panel
-                                            </Button>
-
-                                            {evalResult && <PanelEvalResult data={evalResult} />}
-                                        </Card>
-                                    </motion.div>
-                                )}
-                            </motion.div>
-                        )}
-
-                        {!questions && !loading && !error && (
-                            <motion.div key="empty" className="interview-page__empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                                <MessageSquare size={48} color="var(--color-text-tertiary)" />
-                                <p>Upload a resume and job description to generate interview questions.</p>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-                </div>
+        {phase === 'SETUP' && (
+          <div className={styles.setupGrid}>
+            <div className={styles.panelConfig}>
+              <h3 className={styles.sectionTitle}>Committee Assembly</h3>
+              <div className={styles.agentGrid}>
+                <AgentCard role="Technical Lead" title="System Architecture & Code Quality" glowColor="neon" />
+                <AgentCard role="HR Manager" title="Behavioral & Cultural Fit" glowColor="plasma" />
+                <AgentCard role="Domain Expert" title="Industry Standards & Strategy" glowColor="gold" />
+              </div>
             </div>
-        </motion.div>
-    );
+
+            <div className={styles.formPanel}>
+              <div 
+                className={`${styles.dropzone} ${file ? styles.hasFile : ''}`}
+                onClick={() => fileRef.current?.click()}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={handleDrop}
+              >
+                <input ref={fileRef} type="file" accept=".pdf,.docx,.txt" hidden onChange={(e) => setFile(e.target.files?.[0] || null)} />
+                {file ? (
+                  <div className={styles.fileStatus}>
+                    <CheckCircle size={24} className={styles.successIcon} />
+                    <span>{file.name}</span>
+                  </div>
+                ) : (
+                  <div className={styles.filePrompt}>
+                    <Upload size={24} />
+                    <span>Upload your resume for context</span>
+                  </div>
+                )}
+              </div>
+
+              <div className={styles.formGroup}>
+                <Input label="Target Role" placeholder="e.g. Senior Backend Engineer" value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} />
+                <Input label="Job Description" placeholder="Paste full job description..." value={jobDesc} onChange={(e) => setJobDesc(e.target.value)} isTextarea rows={5} />
+              </div>
+
+              <div className={styles.actions}>
+                <Button variant="primary" disabled={!file || !jobDesc} onClick={handleGenerate}>
+                  Initialize Committee
+                </Button>
+              </div>
+              {error && <div className={styles.error}><AlertCircle size={16}/> {error}</div>}
+            </div>
+          </div>
+        )}
+
+        {phase === 'PROCESSING' && (
+          <div className={styles.processingPhase}>
+            <div className={styles.feedWrapper}>
+              <IntelligenceFeed 
+                text={`> BOOTING COMMITTEE AGENTS...
+> INGESTING CANDIDATE CONTEXT...
+> ANALYZING ROLE REQUIREMENTS...
+> GENERATING TARGETED INQUIRY VECTORS...
+> COMMITTEE READY.`}
+                speed={20}
+                onComplete={handleFeedComplete}
+              />
+            </div>
+          </div>
+        )}
+
+        {phase === 'INTERVIEW' && questions && (
+          <div className={styles.interviewPhase}>
+            <div className={styles.questionPanel}>
+              <div className={styles.qHeader}>
+                <span className={styles.qNum}>Question {activeQIndex + 1}/{questions.length}</span>
+              </div>
+              <h3 className={styles.questionText}>{qText}</h3>
+
+              <div className={styles.answerArea}>
+                <Input 
+                  isTextarea 
+                  rows={6} 
+                  placeholder="Compose your response here..." 
+                  value={answer} 
+                  onChange={(e) => setAnswer(e.target.value)} 
+                />
+                <div className={styles.answerActions}>
+                  <Button variant="primary" onClick={handleEvaluate} disabled={!answer || evalLoading} className={styles.evalBtn}>
+                    {evalLoading ? 'Evaluating...' : 'Submit to Committee'}
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {evalResult && (
+              <div className={styles.evalResults}>
+                <div className={styles.verdictBanner}>
+                  <span className={styles.verdictLabel}>Panel Verdict:</span>
+                  <span className={styles.verdictText}>{evalResult.overall_verdict}</span>
+                </div>
+                
+                <div className={styles.agentFeedbackGrid}>
+                  {(evalResult.agents || []).map((agent, i) => (
+                    <div key={i} className={styles.feedbackCard} style={{ borderColor: agent.agent_color }}>
+                      <div className={styles.feedbackHeader}>
+                        <span className={styles.agentEmoji}>{agent.agent_emoji}</span>
+                        <div className={styles.agentInfo}>
+                          <strong>{agent.agent_name}</strong>
+                          <span>{agent.agent_role}</span>
+                        </div>
+                        <div className={styles.agentScore}>{agent.score}/100</div>
+                      </div>
+                      <p className={styles.feedbackVerdict}>{agent.verdict}</p>
+                      {agent.key_observation && (
+                        <p className={styles.feedbackObservation}>{agent.key_observation}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                <div className={styles.nextActions}>
+                  <Button 
+                    variant="ghost" 
+                    onClick={() => {
+                      if (activeQIndex < questions.length - 1) {
+                        setActiveQIndex(activeQIndex + 1);
+                        setAnswer('');
+                        setEvalResult(null);
+                      }
+                    }}
+                    disabled={activeQIndex >= questions.length - 1}
+                  >
+                    Next Question →
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </ZoneA>
+
+      <ZoneB>
+        {phase === 'SETUP' && (
+          <>
+            <TelemetryCard title="Committee Readiness" icon={Users} status="nominal">
+              <div style={{ color: 'var(--color-text-secondary)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Tech Lead (Neon)</span><span style={{ color: 'var(--color-neon)' }}>Ready</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>HR Manager (Plasma)</span><span style={{ color: 'var(--color-plasma)' }}>Ready</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Domain Expert (Gold)</span><span style={{ color: 'var(--color-gold)' }}>Ready</span>
+                </div>
+              </div>
+            </TelemetryCard>
+            <TelemetryCard title="Context Ingestion" icon={Target} status="warning">
+              <div style={{ color: 'var(--color-text-secondary)', fontStyle: 'italic' }}>
+                Awaiting context documents. Resume and Job Description required to calibrate question vectors.
+              </div>
+            </TelemetryCard>
+          </>
+        )}
+
+        {phase === 'PROCESSING' && (
+          <TelemetryCard title="Generation Matrix" icon={Activity} status="active">
+            <div style={{ color: 'var(--color-text-primary)' }}>
+              Synthesizing domain-specific interrogations...
+            </div>
+          </TelemetryCard>
+        )}
+
+        {phase === 'INTERVIEW' && questions && (
+          <>
+            <TelemetryCard title="Pacing & Confidence" icon={Activity} status={evalResult ? 'nominal' : 'active'}>
+              <div className={styles.telemetryGrid}>
+                <div className={styles.tItem}>
+                  <span>Answer Length</span>
+                  <strong className={styles.textNeon}>{answer.length > 0 ? answer.split(' ').length : 0} words</strong>
+                </div>
+                <div className={styles.tItem}>
+                  <span>Input Status</span>
+                  <strong style={{ color: answer ? 'var(--color-neon)' : 'var(--color-text-tertiary)' }}>{answer ? 'Drafting' : 'Idle'}</strong>
+                </div>
+                <div className={styles.tItem}>
+                  <span>Time Elapsed</span>
+                  <strong>--:--</strong>
+                </div>
+              </div>
+            </TelemetryCard>
+
+            <TelemetryCard title="Session History" icon={Clock} status="nominal">
+              <div className={styles.historyList}>
+                {questions.map((q, i) => (
+                  <div key={i} className={styles.historyItem}>
+                    <div className={styles.hStatus} style={{ 
+                      backgroundColor: i < activeQIndex ? 'var(--color-gold)' : (i === activeQIndex ? 'var(--color-neon)' : 'transparent'),
+                      border: i === activeQIndex ? 'none' : '1px solid var(--color-border)'
+                    }}></div>
+                    <span style={{ color: i === activeQIndex ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)' }}>
+                      Question {i + 1}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </TelemetryCard>
+
+            <TelemetryCard title="Live Agent Coaching" icon={Shield} status={evalResult ? 'nominal' : 'warning'}>
+              {evalResult ? (
+                <div style={{ color: 'var(--color-text-primary)', fontSize: '13px' }}>
+                  Panel has reached consensus. Review feedback and prepare for the next inquiry.
+                </div>
+              ) : (
+                <div style={{ color: 'var(--color-text-secondary)', fontStyle: 'italic', fontSize: '13px' }}>
+                  {answer.length > 50 
+                    ? "Good substance. Ensure you map this directly back to the job description." 
+                    : "Listening... Use the STAR method (Situation, Task, Action, Result) to structure your response."}
+                </div>
+              )}
+            </TelemetryCard>
+          </>
+        )}
+      </ZoneB>
+    </DualZone>
+  );
 }

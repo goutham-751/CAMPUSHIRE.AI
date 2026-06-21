@@ -194,7 +194,16 @@ class AtsScorer:
             else:
                 json_str = response_text.strip()
 
-            result = json.loads(json_str)
+            start_idx = json_str.find("{")
+            end_idx = json_str.rfind("}")
+            if start_idx != -1 and end_idx != -1 and end_idx >= start_idx:
+                json_str = json_str[start_idx:end_idx+1]
+
+            try:
+                result = json.loads(json_str)
+            except json.JSONDecodeError:
+                import ast
+                result = ast.literal_eval(json_str)
 
             required_fields = ["scores", "overall_score", "strengths", "weaknesses", "suggestions"]
             for field in required_fields:

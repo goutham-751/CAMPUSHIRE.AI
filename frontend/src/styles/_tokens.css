@@ -1,0 +1,83 @@
+:root {
+  /* Foundation */
+  --color-void: #06060A;
+  --color-black: #0A0A0F;
+  --color-obsidian: #111118;
+  --color-charcoal: #1A1A24;
+  --color-surface: #22222E;
+  --color-border: #2E2E3E;
+
+  /* Text */
+  --color-text-primary: #EEEEF5;
+  --color-text-secondary: #C8C8D8;
+  --color-text-tertiary: #8888AA;
+  --color-text-muted: #5A5A7A;
+
+  /* Signals */
+  --color-gold: #C9A84C;
+  --color-gold-light: #E8CC7A;
+  --color-gold-dim: #6B5A28;
+  --color-neon: #00E5CC;
+  --color-plasma: #7B5EA7;
+  --color-amber: #F0A500;
+  --color-crimson: #FF4466;
+
+  /* Glows */
+  --glow-gold: 0 0 20px rgba(201, 168, 76, 0.3), 0 0 60px rgba(201, 168, 76, 0.1);
+  --glow-neon: 0 0 20px rgba(0, 229, 204, 0.3), 0 0 60px rgba(0, 229, 204, 0.08);
+  --glow-plasma: 0 0 20px rgba(123, 94, 167, 0.4), 0 0 80px rgba(123, 94, 167, 0.1);
+
+  /* Spacing System */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+  --space-32: 128px;
+
+  /* Easing */
+  --ease-obsidian-standard: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-obsidian-enter: cubic-bezier(0, 0, 0.2, 1);
+  --ease-obsidian-exit: cubic-bezier(0.4, 0, 1, 1);
+  --ease-obsidian-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-obsidian-linear: linear;
+  --ease-obsidian-ai: cubic-bezier(0.87, 0, 0.13, 1);
+
+  /* Durations */
+  --duration-instant: 50ms;
+  --duration-fast: 100ms;
+  --duration-normal: 200ms;
+  --duration-moderate: 300ms;
+  --duration-slow: 500ms;
+  --duration-deliberate: 800ms;
+  --duration-cinematic: 1200ms;
+  --duration-epic: 2000ms;
+}
+
+[data-theme='light'] {
+  /* Foundation */
+  --color-void: #F0F2F5;
+  --color-black: #FFFFFF;
+  --color-obsidian: #FFFFFF;
+  --color-charcoal: #F8F9FA;
+  --color-surface: #FFFFFF;
+  --color-border: #E5E7EB;
+
+  /* Text */
+  --color-text-primary: #111827;
+  --color-text-secondary: #4B5563;
+  --color-text-tertiary: #6B7280;
+  --color-text-muted: #9CA3AF;
+  
+  /* Signals */
+  --color-gold: #B48E3A;
+  --color-neon: #059669;
+  --color-plasma: #6D28D9;
+}

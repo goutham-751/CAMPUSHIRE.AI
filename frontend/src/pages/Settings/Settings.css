@@ -2,10 +2,6 @@
    Settings — CRED-Inspired Premium Styles
    ═══════════════════════════════════════════════════════════════ */
 
-.settings {
-    max-width: 900px;
-}
-
 .settings__header {
     display: flex;
     align-items: center;
@@ -14,7 +10,9 @@
 }
 
 .settings__header h2 {
-    font-size: 1.5rem;
+    font-size: 2rem;
+    font-family: var(--font-display);
+    color: var(--color-text-primary);
 }
 
 .settings__grid {
@@ -63,14 +61,14 @@
 }
 
 .settings__theme-btn:hover:not(:disabled) {
-    border-color: var(--color-accent);
-    color: var(--color-accent);
+    border-color: var(--color-gold);
+    color: var(--color-gold);
 }
 
 .settings__theme-btn.active {
-    border-color: var(--color-accent);
-    background: var(--color-accent-light);
-    color: var(--color-accent);
+    border-color: var(--color-neon);
+    background: rgba(0, 229, 204, 0.05);
+    color: var(--color-neon);
 }
 
 .settings__theme-btn:disabled {
@@ -83,7 +81,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: var(--space-3) 0;
+    padding: var(--space-4) 0;
     cursor: pointer;
     border-bottom: 1px solid var(--color-border);
 }
@@ -105,14 +103,14 @@
 .settings-toggle__desc {
     font-size: 0.75rem;
     color: var(--color-text-tertiary);
-    margin-top: 2px;
+    margin-top: 4px;
 }
 
 .settings-toggle__switch {
     width: 44px;
     height: 24px;
     border-radius: var(--radius-full);
-    background: var(--color-bg-elevated);
+    background: var(--color-surface);
     border: 1px solid var(--color-border);
     padding: 2px;
     flex-shrink: 0;
@@ -120,16 +118,21 @@
 }
 
 .settings-toggle__switch.on {
-    background: var(--color-accent);
-    border-color: var(--color-accent);
+    background: rgba(0, 229, 204, 0.1);
+    border-color: var(--color-neon);
 }
 
 .settings-toggle__knob {
     width: 20px;
     height: 20px;
     border-radius: var(--radius-full);
-    background: #fff;
+    background: var(--color-text-secondary);
     box-shadow: var(--shadow-sm);
+}
+
+.settings-toggle__switch.on .settings-toggle__knob {
+    background: var(--color-neon);
+    box-shadow: 0 0 8px var(--color-neon);
 }
 
 /* ── Select ──────────────────────────────────────────────── */
@@ -149,7 +152,7 @@
     padding: 11px 16px;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
-    background: var(--color-bg-tertiary);
+    background: var(--color-black);
     color: var(--color-text-primary);
     font-size: 0.875rem;
     outline: none;
@@ -157,6 +160,72 @@
 }
 
 .settings__select:focus {
-    border-color: var(--color-accent);
-    box-shadow: 0 0 0 3px var(--color-accent-glow);
+    border-color: var(--color-neon);
+    box-shadow: 0 0 0 1px var(--color-neon);
+}
+
+/* ── Zone B Additions ────────────────────────────────────── */
+.tGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-4);
+}
+
+.tItem {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.tItem span {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    color: var(--color-text-tertiary);
+    text-transform: uppercase;
+}
+
+.tItem strong {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--color-text-primary);
+}
+
+.textNeon { color: var(--color-neon) !important; }
+
+.historyList {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.historyItem {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+}
+
+.hStatus {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-top: 6px;
+    flex-shrink: 0;
+}
+
+.hContent {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.hAction {
+    font-family: var(--font-ui);
+    font-size: 13px;
+    color: var(--color-text-primary);
+}
+
+.hTime {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-text-tertiary);
 }

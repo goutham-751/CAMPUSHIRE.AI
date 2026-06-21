@@ -155,7 +155,21 @@ class ResumeParser:
         elif "```" in raw:
             raw = raw.split("```")[1].split("```")[0].strip()
 
-        data = json.loads(raw)
+        # If there's leading/trailing garbage, try to extract the first { to the last }
+        start_idx = raw.find("{")
+        end_idx = raw.rfind("}")
+        if start_idx != -1 and end_idx != -1 and end_idx >= start_idx:
+            raw = raw[start_idx:end_idx+1]
+
+        try:
+            data = json.loads(raw)
+        except json.JSONDecodeError as e:
+            import ast
+            try:
+                # Attempt to parse Python-like dict structures or trailing commas
+                data = ast.literal_eval(raw)
+            except Exception:
+                raise ValueError(f"Could not parse JSON from LLM: {str(e)}. Raw: {raw[:200]}")
 
         # Ensure expected structure
         defaults = {
