@@ -1,0 +1,13 @@
+We are hiring a Software Engineer with at least 3 years of experience.
+
+Requirements:
+- Strong Python and FastAPI experience
+- Docker and Kubernetes for container orchestration
+- AWS cloud services
+- PostgreSQL or SQL databases
+- REST API design
+- Bachelor's degree in Computer Science or related field
+- Familiarity with React is a plus
+- CI/CD pipelines and Git
+
+Nice to have: Terraform, Kafka, GraphQL

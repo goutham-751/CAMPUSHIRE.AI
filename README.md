@@ -4,7 +4,7 @@
   <img src="https://img.shields.io/badge/Inference-Groq_LPU-orange?style=for-the-badge" alt="Inference" />
 </div>
 
-<h1 align="center">⚡ CampusHire.AI</h1>
+<h1 align="center"> CampusHire.AI</h1>
 
 <p align="center">
   <b>The Enterprise-Grade Autonomous Recruitment & Screening Engine.</b><br/>
@@ -26,10 +26,10 @@ It provides an autonomous, deeply analytical pipeline that bridges the gap betwe
 ## ✨ Core Business Solutions
 
 ### 1. 📄 Deep-Parsing ATS Scorer
-*Eliminate keyword guessing and brittle regex filters.*
-- **Structural Token Extraction:** Ingests unstructured PDFs/DOCX files and maps raw career trajectories into a unified, predictable competency matrix.
-- **Dynamic Cross-Referencing:** Evaluates candidate experience directly against live Job Descriptions, generating an actionable match score.
-- **Optimization Vectors:** Pinpoints exact missing competencies and formatting breaks, driving higher quality candidate pipelines.
+*Eliminate keyword guessing and brittle regex-only filters — with scores you can replay.*
+- **Deterministic parsing:** PDF/DOCX/TXT text extraction plus heuristic section, contact, skill-lexicon, experience, and education parsers. Same file → same structure (no LLM in the parse path).
+- **Deterministic scoring:** Fixed weighted rubric (skills, experience, education, TF-IDF keyword density, formatting, achievements). Same resume + JD → identical scores without calling Groq.
+- **Hybrid feedback:** Actionable tips are derived from score evidence; an optional LLM rewrite may polish wording when configured, but cannot invent numbers.
 
 ### 2. 🛡️ Autonomous Interview Committee
 *Scale your technical and behavioral screening infinitely.*
@@ -61,9 +61,9 @@ Built for scale, speed, and absolute resilience.
 - **Telemetry Middleware:** Custom API interceptors track system latency and LLM payload sizes across all routes.
 
 ### Artificial Intelligence & Voice
-- **Inference Engine:** [Groq](https://groq.com) acts as the neural backbone. By utilizing their proprietary LPU (Language Processing Unit), the system achieves sub-second response times on the `llama-3.3-70b-versatile` model, enabling real-time conversational agents.
-- **Multi-Agent Simulation:** The backend employs advanced role-prompting to instantiate distinct "Personas" that evaluate a single candidate answer from multiple distinct angles simultaneously.
-- **Acoustic Intelligence:** Browser-native `MediaRecorder` captures WebM audio, which is processed via Speech-to-Text (STT) integrations to calculate confidence metrics like WPM, pause ratios, and filler word density.
+- **Hybrid design:** Resume parse + ATS score are **deterministic** (rules, skill lexicon, TF-IDF). Groq powers interview question generation, optional feedback prose polish, and multi-agent panel evaluation — not the ATS number itself.
+- **Inference Engine:** [Groq](https://groq.com) for LLM-assisted flows via `openai/gpt-oss-120b` (configurable via `GROQ_MODEL`).
+- **Acoustic Intelligence:** Browser-native `MediaRecorder` captures WebM audio; tone metrics (WPM, fillers, pauses) are computed deterministically in code.
 
 ---
 
@@ -132,10 +132,19 @@ graph LR
 
 | Endpoint | Method | Purpose |
 | :--- | :--- | :--- |
-| `/api/resume/score` | `POST` | Core ATS validation & missing keyword analysis |
+| `/api/resume/score` | `POST` | Deterministic ATS validation & missing keyword analysis |
 | `/api/interview/questions` | `POST` | Generates targeted behavioral/technical questions |
 | `/api/interview/panel-evaluate` | `POST` | Submits answers to the Multi-Agent panel for scoring |
 | `/api/telemetry` | `GET` | System health, API latency, and uptime metrics |
+
+### Backend tests (deterministic ATS)
+
+```bash
+# from repo root
+python -m pytest backend/tests -v
+```
+
+Parser and ATS scorer tests require no API keys.
 
 ---
 

@@ -221,6 +221,11 @@ class AgentEvaluator:
                 max_tokens=1024,
                 response_format={"type": "json_object"},
             )
+            try:
+                from backend.telemetry import record_llm_usage
+                record_llm_usage(getattr(response, "usage", None))
+            except Exception:
+                pass
 
             text = response.choices[0].message.content or ""
             return self._parse_json(text)
@@ -262,6 +267,11 @@ class AgentEvaluator:
                 max_tokens=512,
                 response_format={"type": "json_object"},
             )
+            try:
+                from backend.telemetry import record_llm_usage
+                record_llm_usage(getattr(response, "usage", None))
+            except Exception:
+                pass
 
             text = response.choices[0].message.content or ""
             return self._parse_json(text)

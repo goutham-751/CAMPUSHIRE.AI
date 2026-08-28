@@ -9,7 +9,7 @@ import os
 import sys
 import logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request, status
+from fastapi import Depends, FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -24,6 +24,7 @@ from backend.models.schemas import HealthResponse, ErrorResponse
 from backend.api.resume import router as resume_router
 from backend.api.interview import router as interview_router
 from backend.api.voice import router as voice_router
+from backend.auth import get_current_user
 from backend.telemetry import get_telemetry_data, record_api_call
 import time
 
@@ -51,17 +52,18 @@ app = FastAPI(
     version=settings.APP_VERSION,
     description=settings.APP_DESCRIPTION,
     lifespan=lifespan,
-    docs_url="/docs",
-    redoc_url="/redoc",
+    docs_url="/docs" if settings.DEBUG else None,
+    redoc_url="/redoc" if settings.DEBUG else None,
+    openapi_url="/openapi.json" if settings.DEBUG else None,
 )
 
 # ── CORS ────────────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=settings.cors_origins_list(),
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "Accept"],
 )
 
 # ── Telemetry Middleware ────────────────────────────────────────
@@ -71,12 +73,9 @@ async def telemetry_middleware(request: Request, call_next):
     response = await call_next(request)
     process_time = (time.time() - start_time) * 1000  # ms
     
-    # Check if it's an LLM-heavy route to simulate token usage
-    is_llm = request.url.path.startswith("/api/resume") or request.url.path.startswith("/api/interview")
-    
-    # Exclude /api/telemetry itself from affecting the latency metrics heavily
+    # Record latency for all routes; token usage is recorded only from real LLM responses
     if request.url.path != "/api/telemetry":
-        record_api_call(process_time, is_llm)
+        record_api_call(process_time, is_llm=False)
         
     return response
 
@@ -111,5 +110,48 @@ async def health_check():
     )
 
 @app.get("/api/telemetry", tags=["Health"])
-async def telemetry_endpoint():
+async def telemetry_endpoint(_user=Depends(get_current_user)):
     return get_telemetry_data()
+
+
+@app.get("/api/system/status", tags=["Health"])
+async def system_status(_user=Depends(get_current_user)):
+    """Live integration/config status for Settings — no hardcoded vendor claims."""
+    from backend.database import supabase
+    from backend.telemetry import get_telemetry_data
+
+    groq_ok = bool(settings.GROQ_API_KEY and settings.GROQ_API_KEY not in ("", "YOUR_GROQ_API_KEY", "your_groq_api_key_here"))
+    supabase_ok = supabase is not None and bool(settings.SUPABASE_URL)
+    tel = get_telemetry_data()
+    payload = {
+        "success": True,
+        "integrations": [
+            {
+                "id": "groq",
+                "name": "Groq Inference",
+                "status": "connected" if groq_ok else "not_configured",
+                "detail": settings.GROQ_MODEL if groq_ok else "Set GROQ_API_KEY",
+            },
+            {
+                "id": "supabase",
+                "name": "Supabase Auth & Storage",
+                "status": "connected" if supabase_ok else "not_configured",
+                "detail": "Auth + resume persistence" if supabase_ok else "Set SUPABASE_URL / SUPABASE_KEY",
+            },
+            {
+                "id": "ats",
+                "name": "Deterministic ATS",
+                "status": "connected",
+                "detail": "scoring_engine=deterministic_v1",
+            },
+            {
+                "id": "voice",
+                "name": "Voice (edge-tts / STT)",
+                "status": "connected",
+                "detail": "Browser MediaRecorder + tone metrics",
+            },
+        ],
+        "telemetry": tel,
+        "app_version": settings.APP_VERSION,
+    }
+    return payload

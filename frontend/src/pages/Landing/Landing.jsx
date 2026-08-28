@@ -3,10 +3,13 @@ import AmbientField from '../../components/Ambient/AmbientField';
 import Button from '../../components/ui/Button/Button';
 import { BadgeAI } from '../../components/ui/Badge/Badge';
 import { ArrowRight } from 'lucide-react';
+import { useAuth } from '../../store/AuthContext';
 import styles from './Landing.module.css';
 
 export default function Landing() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const enterPath = user ? '/app' : '/login';
 
   return (
     <AmbientField>
@@ -14,8 +17,8 @@ export default function Landing() {
         <div className={styles.logo}>
           <span className={styles.logoIcon}>◈</span>
         </div>
-        <Button variant="ghost" onClick={() => navigate('/app')}>
-          Enter <ArrowRight size={16} />
+        <Button variant="ghost" onClick={() => navigate(enterPath)}>
+          {user ? 'Open Workspace' : 'Sign In'} <ArrowRight size={16} />
         </Button>
       </nav>
 
@@ -35,10 +38,10 @@ export default function Landing() {
         </p>
 
         <div className={styles.ctaGroup}>
-          <Button variant="primary" onClick={() => navigate('/app')} className={styles.mainCta}>
+          <Button variant="primary" onClick={() => navigate(enterPath)} className={styles.mainCta}>
             <span className={styles.ctaIcon}>◉</span> Enter the Platform
           </Button>
-          <Button variant="ghost" onClick={() => navigate('/app/resume')}>
+          <Button variant="ghost" onClick={() => navigate(user ? '/app/resume' : '/login')}>
             Try Resume Analyzer <ArrowRight size={16} />
           </Button>
         </div>

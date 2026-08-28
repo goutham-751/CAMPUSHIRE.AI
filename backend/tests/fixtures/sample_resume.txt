@@ -1,0 +1,36 @@
+Jane Doe
+jane.doe@email.com | (555) 123-4567
+linkedin.com/in/janedoe | github.com/janedoe
+
+Summary
+Backend engineer with experience building APIs and data pipelines. Focused on Python, FastAPI, and cloud systems.
+
+Skills
+Python, JavaScript, React, FastAPI, Docker, PostgreSQL, Git, AWS, SQL, REST
+
+Experience
+Software Engineer at Acme Corp
+Jan 2020 - Present
+- Built REST APIs serving 50,000+ users with FastAPI and PostgreSQL
+- Reduced deployment time by 40% using Docker and CI/CD
+- Led a team of 4 engineers on microservices migration
+
+Junior Developer at StartupXYZ
+Jun 2018 - Dec 2019
+- Developed internal tools with Python and React
+- Improved query performance by 25% on MySQL reports
+
+Education
+Bachelor of Science in Computer Science, State University
+2014 - 2018
+
+Projects
+CampusHire Dashboard
+- Built a hiring analytics dashboard with React and Node.js
+- Processed 10,000 resume records for match scoring
+
+Certifications
+AWS Certified Developer Associate
+
+Languages
+English, Spanish

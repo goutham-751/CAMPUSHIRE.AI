@@ -78,6 +78,7 @@ class QuestionGenerator:
     ) -> Dict[str, Any]:
         """Generate interview questions based on resume and job description."""
         try:
+            num_questions = max(1, min(int(num_questions or 10), 15))
             candidate_background = self._prepare_candidate_background(resume_data)
 
             prompt = self.prompt_template.format(
@@ -95,6 +96,11 @@ class QuestionGenerator:
                 temperature=0.7,
                 max_tokens=4096,
             )
+            try:
+                from backend.telemetry import record_llm_usage
+                record_llm_usage(getattr(response, "usage", None))
+            except Exception:
+                pass
 
             response_text = response.choices[0].message.content
             if not response_text:
@@ -146,6 +152,11 @@ class QuestionGenerator:
                 temperature=0.3,
                 max_tokens=2048,
             )
+            try:
+                from backend.telemetry import record_llm_usage
+                record_llm_usage(getattr(response, "usage", None))
+            except Exception:
+                pass
 
             response_text = response.choices[0].message.content
             if not response_text:

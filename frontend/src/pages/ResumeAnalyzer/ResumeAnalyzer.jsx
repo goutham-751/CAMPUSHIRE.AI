@@ -65,6 +65,7 @@ export default function ResumeAnalyzer() {
             <div className={styles.header}>
               <h2>Resume Intelligence</h2>
               <p>Upload your document for deep structural analysis.</p>
+              <span className={styles.engineBadge}>Deterministic ATS</span>
             </div>
 
             <div 
@@ -126,7 +127,12 @@ export default function ResumeAnalyzer() {
         {phase === 'RESULTS' && result && (
           <div className={styles.resultsPhase}>
             <div className={styles.resultsHeader}>
-              <h2>Analysis Complete</h2>
+              <div>
+                <h2>Analysis Complete</h2>
+                <span className={styles.engineBadge}>
+                  {result.scoring_engine === 'deterministic_v1' ? 'Deterministic ATS' : (result.scoring_engine || 'Deterministic ATS')}
+                </span>
+              </div>
               <Button variant="ghost" onClick={() => { setPhase('UPLOAD'); setFile(null); setResult(null); }}>
                 New Analysis
               </Button>
@@ -172,7 +178,7 @@ export default function ResumeAnalyzer() {
             <TelemetryCard title="System Readiness" icon={Activity} status={telemetry.status === 'Active' ? 'nominal' : 'warning'}>
               <div style={{ color: 'var(--color-text-secondary)' }}>
                 {telemetry.status === 'Active' 
-                  ? "Waiting for document ingestion. The ATS Analysis engine is primed and ready to evaluate formatting, keyword match, and structural integrity." 
+                  ? "Waiting for document ingestion. Deterministic ATS evaluates skills, experience, education, TF-IDF keywords, formatting, and achievements — scores are computed in code, not by an LLM." 
                   : "System degraded. API Latency is abnormally high."}
               </div>
             </TelemetryCard>

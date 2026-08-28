@@ -33,18 +33,32 @@ export default function VoiceStudio() {
   const [confidenceMetrics, setConfidenceMetrics] = useState(null);
 
   const mediaRecorderRef = useRef(null);
+  const streamRef = useRef(null);
   const chunksRef = useRef([]);
   const fileRef = useRef(null);
+  const mountedRef = useRef(true);
   const telemetry = useTelemetry(3000);
   const [micStatus, setMicStatus] = useState('Detecting...');
 
   useEffect(() => {
+    mountedRef.current = true;
     navigator.mediaDevices.enumerateDevices()
       .then(devices => {
         const hasMic = devices.some(d => d.kind === 'audioinput');
         setMicStatus(hasMic ? 'Detected' : 'Not Found');
       })
       .catch(() => setMicStatus('Access Denied'));
+
+    return () => {
+      mountedRef.current = false;
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+      try {
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+          mediaRecorderRef.current.stop();
+        }
+      } catch { /* already stopped */ }
+    };
   }, []);
 
   const handleDrop = (e) => {
@@ -72,14 +86,20 @@ export default function VoiceStudio() {
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+      streamRef.current = stream;
+      const mimeType = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4']
+        .find((type) => window.MediaRecorder && MediaRecorder.isTypeSupported(type)) || '';
+      const recorder = mimeType
+        ? new MediaRecorder(stream, { mimeType })
+        : new MediaRecorder(stream);
       chunksRef.current = [];
       recorder.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
-      recorder.onstop = () => { stream.getTracks().forEach(t => t.stop()); };
       recorder.start();
       mediaRecorderRef.current = recorder;
       setIsRecording(true);
     } catch (err) {
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
       setError('Microphone access denied.');
     }
   };
@@ -88,11 +108,19 @@ export default function VoiceStudio() {
     if (!mediaRecorderRef.current) return;
     return new Promise((resolve) => {
       mediaRecorderRef.current.onstop = async () => {
-        const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+        streamRef.current?.getTracks().forEach((t) => t.stop());
+        streamRef.current = null;
+        if (!mountedRef.current) {
+          resolve();
+          return;
+        }
+        const blobType = mediaRecorderRef.current?.mimeType || 'audio/webm';
+        const blob = new Blob(chunksRef.current, { type: blobType });
         setIsRecording(false);
         setIsEvaluating(true);
         try {
-          const audioFile = new File([blob], 'answer.webm', { type: 'audio/webm' });
+          const ext = blobType.includes('mp4') ? 'mp4' : 'webm';
+          const audioFile = new File([blob], `answer.${ext}`, { type: blobType });
           const sttResult = await voiceApi.stt(audioFile);
           const text = sttResult?.text || '';
           setTranscript(text);
@@ -110,7 +138,7 @@ export default function VoiceStudio() {
         } catch (e) {
           setCurrentEval({ aggregated_score: 0, overall_verdict: 'Error', final_recommendation: e.message });
         } finally {
-          setIsEvaluating(false);
+          if (mountedRef.current) setIsEvaluating(false);
           resolve();
         }
       };

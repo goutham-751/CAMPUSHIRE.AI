@@ -2,6 +2,7 @@
  * Central API service layer for CampusHire.AI
  */
 import axios from 'axios';
+import { supabase } from './supabase';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
@@ -13,9 +14,15 @@ const api = axios.create({
 
 // ── Request interceptor ──────────────────────────────────────
 api.interceptors.request.use(
-    (config) => {
-        const token = localStorage.getItem('campushire-token');
-        if (token) config.headers.Authorization = `Bearer ${token}`;
+    async (config) => {
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.access_token) {
+                config.headers.Authorization = `Bearer ${session.access_token}`;
+            }
+        } catch {
+            /* proceed without a token */
+        }
         return config;
     },
     (error) => Promise.reject(error),
@@ -30,15 +37,20 @@ api.interceptors.response.use(
         return response.data;
     },
     (error) => {
-        // Handle token expiration
         if (error.response?.status === 401) {
-            localStorage.removeItem('campushire-token');
-            return Promise.reject(new Error("Session expired. Please log in again."));
+            const sentAuth = error.config?.headers?.Authorization;
+            if (sentAuth) {
+                supabase.auth.signOut().catch(() => {});
+            }
+            return Promise.reject(new Error('Session expired. Please log in again.'));
         }
 
-        // Handle timeout or Render cold start proxy errors
+        if (error.response?.status === 429) {
+            return Promise.reject(new Error('Too many requests. Please wait a moment and try again.'));
+        }
+
         if (error.code === 'ECONNABORTED' || error.response?.status === 502 || error.response?.status === 504 || error.message?.includes('timeout')) {
-            return Promise.reject(new Error("The server is waking up or taking too long to respond. Please wait a moment and try again."));
+            return Promise.reject(new Error('The server is waking up or taking too long to respond. Please wait a moment and try again.'));
         }
         let message = error.response?.data?.detail || error.response?.data?.error || error.message;
         if (typeof message === 'object') {
@@ -83,6 +95,9 @@ export const resumeApi = {
         form.append('company_name', companyName);
         form.append('job_description', jobDescription);
         return api.post('/api/resume/score', form);
+    },
+    getUserResumes: () => {
+        return api.get('/api/resume/me');
     },
     feedback: (file, jobTitle, companyName, jobDescription) => {
         const form = new FormData();
@@ -142,6 +157,7 @@ export const voiceApi = {
 export const healthApi = {
     check: () => api.get('/health'),
     getTelemetry: () => api.get('/api/telemetry'),
+    getSystemStatus: () => api.get('/api/system/status'),
 };
 
 export default api;

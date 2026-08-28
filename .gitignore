@@ -22,7 +22,9 @@ frontend/.vite/
 .env
 .env.local
 .env.*.local
-.env*
+.env.development
+.env.production
+!.env.example
 
 # OS files
 .DS_Store

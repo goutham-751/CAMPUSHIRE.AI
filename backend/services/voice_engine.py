@@ -46,6 +46,7 @@ class VoiceEngine:
         output_format: str = "mp3",
     ) -> BinaryIO:
         """Convert text to speech and return the audio data as a BytesIO object."""
+        temp_path = None
         try:
             if voice_id is None:
                 voice_id = self.default_voice
@@ -66,11 +67,9 @@ class VoiceEngine:
             with open(temp_path, "rb") as f:
                 audio_data = io.BytesIO(f.read())
 
-            os.unlink(temp_path)
             return audio_data
 
         except Exception as e:
-            # Fallback to gTTS
             try:
                 tts = gTTS(text=text, lang=language, slow=slow)
                 audio_data = io.BytesIO()
@@ -78,9 +77,13 @@ class VoiceEngine:
                 audio_data.seek(0)
                 return audio_data
             except Exception as e2:
-                raise Exception(
-                    f"TTS generation failed: {str(e)} (Fallback also failed: {str(e2)})"
-                )
+                raise Exception("TTS generation failed.") from e2
+        finally:
+            if temp_path and os.path.exists(temp_path):
+                try:
+                    os.unlink(temp_path)
+                except OSError:
+                    pass
 
     async def speech_to_text(
         self,

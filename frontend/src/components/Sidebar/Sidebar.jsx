@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     LayoutDashboard, FileText, Mic, MessageSquare,
-    Settings, ChevronLeft, ChevronRight, Sparkles,
+    Settings, ChevronLeft, ChevronRight, Sparkles, LogOut
 } from 'lucide-react';
+import { useAuth } from '../../store/AuthContext';
 import './Sidebar.css';
 
 const NAV_ITEMS = [
@@ -18,6 +19,13 @@ const NAV_ITEMS = [
 export default function Sidebar() {
     const [collapsed, setCollapsed] = useState(false);
     const location = useLocation();
+    const navigate = useNavigate();
+    const { signOut } = useAuth();
+
+    const handleLogout = async () => {
+        await signOut();
+        navigate('/login');
+    };
 
     return (
         <motion.aside
@@ -74,6 +82,29 @@ export default function Sidebar() {
                         </AnimatePresence>
                     </NavLink>
                 ))}
+                
+                <button 
+                    onClick={handleLogout}
+                    className="sidebar__link" 
+                    style={{ marginTop: 'auto', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%' }}
+                >
+                    <div className="sidebar__link-icon">
+                        <LogOut size={20} />
+                    </div>
+                    <AnimatePresence>
+                        {!collapsed && (
+                            <motion.span
+                                className="sidebar__link-label"
+                                initial={{ opacity: 0, width: 0 }}
+                                animate={{ opacity: 1, width: 'auto' }}
+                                exit={{ opacity: 0, width: 0 }}
+                                transition={{ duration: 0.2 }}
+                            >
+                                Sign Out
+                            </motion.span>
+                        )}
+                    </AnimatePresence>
+                </button>
             </nav>
 
             {/* Collapse toggle */}

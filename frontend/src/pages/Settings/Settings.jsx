@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Sun, Moon, Bell, Globe, Palette, Monitor, Shield, Save, Database, History, Link as LinkIcon } from 'lucide-react';
 import Card from '../../components/Card/Card';
@@ -6,6 +6,8 @@ import Button from '../../components/Button/Button';
 import DualZone, { ZoneA, ZoneB } from '../../components/Layout/DualZone';
 import TelemetryCard from '../../components/Cards/TelemetryCard';
 import { useTheme } from '../../store/ThemeContext';
+import { healthApi, getHistory } from '../../lib/api';
+import { useAuth } from '../../store/AuthContext';
 import './Settings.css';
 
 function Toggle({ checked, onChange, label, desc }) {
@@ -26,17 +28,44 @@ function Toggle({ checked, onChange, label, desc }) {
     );
 }
 
+function statusColor(status) {
+    if (status === 'connected') return 'var(--color-neon)';
+    if (status === 'not_configured') return 'var(--color-gold)';
+    return 'var(--color-text-tertiary)';
+}
+
 export default function Settings() {
     const { theme, toggleTheme } = useTheme();
+    const { user } = useAuth();
     const [notifs, setNotifs] = useState({ email: true, push: false, weekly: true });
     const [lang, setLang] = useState('en');
     const [saved, setSaved] = useState(false);
     const [privacy, setPrivacy] = useState({ analytics: true, retention: true });
+    const [systemStatus, setSystemStatus] = useState(null);
+    const [statusError, setStatusError] = useState(null);
+    const history = getHistory().slice(0, 5);
+
+    useEffect(() => {
+        let mounted = true;
+        healthApi.getSystemStatus()
+            .then((data) => {
+                if (!mounted) return;
+                setSystemStatus(data);
+            })
+            .catch((err) => {
+                if (!mounted) return;
+                setStatusError(err.message || 'Failed to load system status');
+            });
+        return () => { mounted = false; };
+    }, []);
 
     const handleSave = () => {
         setSaved(true);
         setTimeout(() => setSaved(false), 2000);
     };
+
+    const tel = systemStatus?.telemetry || {};
+    const integrations = systemStatus?.integrations || [];
 
     return (
         <DualZone>
@@ -49,7 +78,6 @@ export default function Settings() {
                 </div>
 
                 <div className="settings__grid">
-                    {/* Appearance */}
                     <Card variant="glass" className="settings__section">
                         <div className="settings__section-header">
                             <Palette size={20} />
@@ -77,7 +105,6 @@ export default function Settings() {
                         </div>
                     </Card>
 
-                    {/* Notifications */}
                     <Card variant="glass" className="settings__section">
                         <div className="settings__section-header">
                             <Bell size={20} />
@@ -103,7 +130,6 @@ export default function Settings() {
                         />
                     </Card>
 
-                    {/* Language */}
                     <Card variant="glass" className="settings__section">
                         <div className="settings__section-header">
                             <Globe size={20} />
@@ -120,7 +146,6 @@ export default function Settings() {
                         </div>
                     </Card>
 
-                    {/* Privacy */}
                     <Card variant="glass" className="settings__section">
                         <div className="settings__section-header">
                             <Shield size={20} />
@@ -146,76 +171,84 @@ export default function Settings() {
             </ZoneA>
 
             <ZoneB>
-                <TelemetryCard title="Storage Allocation" icon={Database} status="nominal">
+                <TelemetryCard title="Live Telemetry" icon={Database} status="nominal">
                     <div className="tGrid">
                         <div className="tItem">
-                            <span>Resumes</span>
-                            <strong className="textNeon">2.4 MB</strong>
+                            <span>API Latency</span>
+                            <strong className="textNeon">{tel.api_latency_ms ?? '—'} ms</strong>
                         </div>
                         <div className="tItem">
-                            <span>Audio Cache</span>
-                            <strong>14.2 MB</strong>
+                            <span>Requests</span>
+                            <strong>{tel.request_count ?? 0}</strong>
                         </div>
                         <div className="tItem">
-                            <span>Evaluations</span>
-                            <strong>0.8 MB</strong>
+                            <span>LLM Tokens</span>
+                            <strong>{tel.total_tokens ?? 0}</strong>
                         </div>
                         <div className="tItem">
-                            <span>Quota Usage</span>
-                            <strong>17.4 / 100 MB</strong>
+                            <span>Uptime</span>
+                            <strong>{tel.uptime || '—'}</strong>
                         </div>
                     </div>
+                    {statusError && (
+                        <div style={{ marginTop: '0.75rem', color: 'var(--color-text-tertiary)', fontSize: '0.85rem' }}>
+                            {statusError}
+                        </div>
+                    )}
                 </TelemetryCard>
 
-                <TelemetryCard title="Access Logs" icon={History} status="nominal">
+                <TelemetryCard title="Activity" icon={History} status="nominal">
                     <div className="historyList">
-                        <div className="historyItem">
-                            <div className="hStatus" style={{ backgroundColor: 'var(--color-neon)' }}></div>
-                            <div className="hContent">
-                                <span className="hAction">Login (Current Session)</span>
-                                <span className="hTime">Today, 11:01 AM (IP: 192.168.1.1)</span>
+                        {user?.email && (
+                            <div className="historyItem">
+                                <div className="hStatus" style={{ backgroundColor: 'var(--color-neon)' }}></div>
+                                <div className="hContent">
+                                    <span className="hAction">Signed in</span>
+                                    <span className="hTime">{user.email}</span>
+                                </div>
                             </div>
-                        </div>
-                        <div className="historyItem">
-                            <div className="hStatus" style={{ backgroundColor: 'var(--color-text-tertiary)' }}></div>
-                            <div className="hContent">
-                                <span className="hAction">Resume Analyzed</span>
-                                <span className="hTime">Yesterday, 14:32 PM</span>
+                        )}
+                        {history.map((h, i) => (
+                            <div key={i} className="historyItem">
+                                <div className="hStatus" style={{ backgroundColor: 'var(--color-text-tertiary)' }}></div>
+                                <div className="hContent">
+                                    <span className="hAction">{h.text || h.type}</span>
+                                    <span className="hTime">{h.timestamp ? new Date(h.timestamp).toLocaleString() : ''}</span>
+                                </div>
                             </div>
-                        </div>
-                        <div className="historyItem">
-                            <div className="hStatus" style={{ backgroundColor: 'var(--color-text-tertiary)' }}></div>
-                            <div className="hContent">
-                                <span className="hAction">System Settings Modified</span>
-                                <span className="hTime">3 days ago, 09:15 AM</span>
+                        ))}
+                        {!user && history.length === 0 && (
+                            <div className="historyItem">
+                                <div className="hStatus" style={{ backgroundColor: 'var(--color-text-tertiary)' }}></div>
+                                <div className="hContent">
+                                    <span className="hAction">No activity yet</span>
+                                    <span className="hTime">Run Resume Analyzer or Interview to populate</span>
+                                </div>
                             </div>
-                        </div>
+                        )}
                     </div>
                 </TelemetryCard>
 
                 <TelemetryCard title="Integrations" icon={LinkIcon} status="active">
                     <div className="historyList">
-                        <div className="historyItem">
-                            <div className="hStatus" style={{ backgroundColor: 'var(--color-neon)' }}></div>
-                            <div className="hContent">
-                                <span className="hAction">OpenAI API</span>
-                                <span className="hTime">Connected (GPT-4o)</span>
+                        {integrations.length === 0 && !statusError && (
+                            <div className="historyItem">
+                                <div className="hStatus" style={{ backgroundColor: 'var(--color-text-tertiary)' }}></div>
+                                <div className="hContent">
+                                    <span className="hAction">Loading status…</span>
+                                    <span className="hTime">Fetching /api/system/status</span>
+                                </div>
                             </div>
-                        </div>
-                        <div className="historyItem">
-                            <div className="hStatus" style={{ backgroundColor: 'var(--color-gold)' }}></div>
-                            <div className="hContent">
-                                <span className="hAction">AssemblyAI API</span>
-                                <span className="hTime">Initializing (STT Module)</span>
+                        )}
+                        {integrations.map((item) => (
+                            <div key={item.id} className="historyItem">
+                                <div className="hStatus" style={{ backgroundColor: statusColor(item.status) }}></div>
+                                <div className="hContent">
+                                    <span className="hAction">{item.name}</span>
+                                    <span className="hTime">{item.status} — {item.detail}</span>
+                                </div>
                             </div>
-                        </div>
-                        <div className="historyItem">
-                            <div className="hStatus" style={{ backgroundColor: 'var(--color-text-tertiary)' }}></div>
-                            <div className="hContent">
-                                <span className="hAction">Google Drive</span>
-                                <span className="hTime">Not Connected</span>
-                            </div>
-                        </div>
+                        ))}
                     </div>
                 </TelemetryCard>
             </ZoneB>

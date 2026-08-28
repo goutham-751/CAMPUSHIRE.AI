@@ -12,6 +12,7 @@
   flex-direction: column;
   gap: var(--space-8);
   min-width: 0; /* Prevent grid blowout */
+  width: 100%;
 }
 
 .zoneB {
@@ -19,6 +20,7 @@
   flex-direction: column;
   gap: var(--space-6);
   min-width: 0;
+  width: 100%;
   position: sticky;
   top: 0; /* Sticky scrolling for telemetry panel */
   background-color: transparent;

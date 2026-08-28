@@ -18,15 +18,22 @@ class Settings(BaseSettings):
 
     # --- API Keys ---
     GROQ_API_KEY: str = ""
+    SUPABASE_URL: str = ""
+    SUPABASE_KEY: str = ""
 
-    # --- Groq Model ---
-    GROQ_MODEL: str = "llama-3.3-70b-versatile"
+    # --- Groq Model (must be a valid Groq model id) ---
+    # llama-3.3-70b-versatile was shut down; use a current catalog id.
+    GROQ_MODEL: str = "openai/gpt-oss-120b"
 
-    # --- CORS ---
-    CORS_ORIGINS: List[str] = ["*"]
+    # --- CORS (comma-separated; never use * with credentials) ---
+    CORS_ORIGINS: str = (
+        "http://localhost:5173,http://127.0.0.1:5173,"
+        "http://localhost:4173,http://127.0.0.1:4173"
+    )
 
     # --- File Upload ---
-    MAX_UPLOAD_SIZE_MB: int = 10  # Maximum file size in MB
+    MAX_UPLOAD_SIZE_MB: int = 10
+    MAX_AUDIO_UPLOAD_MB: int = 15
     ALLOWED_FILE_EXTENSIONS: List[str] = [".pdf", ".docx", ".txt"]
     UPLOAD_DIR: str = os.path.join(tempfile.gettempdir(), "campushire_uploads")
 
@@ -44,6 +51,15 @@ class Settings(BaseSettings):
         env_file_encoding = "utf-8"
         case_sensitive = True
 
+    def cors_origins_list(self) -> List[str]:
+        origins = [o.strip() for o in str(self.CORS_ORIGINS).split(",") if o.strip()]
+        if not origins or origins == ["*"]:
+            return [
+                "http://localhost:5173",
+                "http://127.0.0.1:5173",
+            ]
+        return origins
+
 
 # Singleton settings instance
 settings = Settings()
@@ -52,13 +68,13 @@ settings = Settings()
 def validate_settings():
     """Validate that required settings are configured."""
     errors = []
-    
+
     if not settings.GROQ_API_KEY or settings.GROQ_API_KEY == "your_groq_api_key_here":
         errors.append(
             "GROQ_API_KEY is not set. Please set it in your .env file.\n"
             "Get your API key from: https://console.groq.com"
         )
-    
+
     if errors:
         error_msg = "\n".join(f"❌ {error}" for error in errors)
         raise ValueError(
@@ -70,14 +86,13 @@ def validate_settings():
             f"GROQ_API_KEY=your_actual_api_key_here\n"
             f"DEBUG=True\n"
         )
-    
+
     return True
 
 # Validate on import (can be disabled for testing)
 try:
     validate_settings()
 except ValueError as e:
-    # Only raise in non-debug mode or if explicitly required
     if not settings.DEBUG:
         import warnings
         warnings.warn(str(e), UserWarning)

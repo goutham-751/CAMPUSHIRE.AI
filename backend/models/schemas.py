@@ -58,6 +58,7 @@ class ATSScoreResponse(BaseModel):
     suggestions: List[str] = Field(default_factory=list)
     missing_keywords: List[str] = Field(default_factory=list)
     ats_optimization_tips: List[str] = Field(default_factory=list)
+    scoring_engine: str = "deterministic_v1"
 
 
 class FeedbackRequest(BaseModel):

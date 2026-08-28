@@ -1,43 +1,24 @@
-import os
-from typing import Dict, Any, List, Optional
-from pathlib import Path
-from groq import AsyncGroq
-from dotenv import load_dotenv
+"""
+Hybrid resume feedback generator.
+
+Primary path is deterministic (built from ATS evidence). Optional Groq rewrite
+polishes prose but cannot invent scores — facts are locked from the scorer.
+"""
+
+from __future__ import annotations
+
+import json
+import logging
+from typing import Any, Dict, List, Optional
 
 from backend.config import settings
+from backend.services.ats_scorer import score_resume_ats_sync
 
-load_dotenv()
+logger = logging.getLogger("campushire.feedback")
 
 
 class FeedbackGenerator:
-    """Generates actionable resume improvement feedback using Groq AI."""
-
-    def __init__(self):
-        self.api_key = settings.GROQ_API_KEY
-        if not self.api_key:
-            raise ValueError("GROQ_API_KEY environment variable not set")
-
-        self.client = AsyncGroq(api_key=self.api_key)
-        self.model_name = settings.GROQ_MODEL
-
-        self.feedback_template = """
-        You are an expert career coach and hiring manager with 15+ years of experience in technical recruiting.
-        Analyze the following resume and provide specific, actionable feedback to improve it for the {job_title} role at {company_name}.
-        
-        Resume Summary:
-        {resume_summary}
-        
-        Job Description:
-        {job_description}
-        
-        Please provide feedback in the following format:
-        
-        1. **Strengths** (2-3 key strengths)
-        2. **Areas for Improvement** (3-5 specific areas)
-        3. **ATS Optimization** (how to improve for applicant tracking systems)
-        4. **Skill Gap Analysis** (missing skills for this role)
-        5. **Actionable Recommendations** (concrete steps to improve)
-        """
+    """Builds actionable feedback from deterministic ATS facts."""
 
     async def generate_feedback(
         self,
@@ -46,132 +27,161 @@ class FeedbackGenerator:
         company_name: str,
         job_description: str,
     ) -> Dict[str, Any]:
-        """
-        Generate feedback for a resume based on a specific job description.
-
-        Args:
-            resume_data: Parsed resume data from resume_parser.py
-            job_title: The target job title
-            company_name: The target company name
-            job_description: The job description text
-
-        Returns:
-            Dictionary containing feedback sections
-        """
         try:
-            resume_summary = self._prepare_resume_summary(resume_data)
-
-            prompt = self.feedback_template.format(
-                job_title=job_title,
-                company_name=company_name,
-                resume_summary=resume_summary,
-                job_description=job_description,
+            ats = score_resume_ats_sync(
+                resume_data, job_title, company_name, job_description
             )
+            if not ats.get("success"):
+                return {"success": False, "error": ats.get("error", "ATS scoring failed")}
 
-            response = await self.client.chat.completions.create(
-                model=self.model_name,
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.5,
-                max_tokens=4096,
-            )
+            result = ats["result"]
+            feedback = self._from_ats_result(result, job_title, company_name)
 
-            response_text = response.choices[0].message.content
-            if not response_text:
-                raise ValueError("No text content in API response")
+            raw_response = None
+            if settings.GROQ_API_KEY:
+                polished, raw_response = await self._optional_llm_rewrite(
+                    feedback, result, job_title, company_name
+                )
+                if polished:
+                    feedback = polished
 
-            feedback = self._parse_feedback_response(response_text)
-            
             return {
                 "success": True,
                 "feedback": feedback,
-                "raw_response": response_text,
+                "raw_response": raw_response,
+                "ats_overall_score": result.get("overall_score"),
+                "scoring_engine": "deterministic_v1",
             }
-
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    def _prepare_resume_summary(self, resume_data: Dict[str, Any]) -> str:
-        """Convert parsed resume data into a structured text summary."""
-        summary_parts = []
+    def _from_ats_result(
+        self,
+        result: Dict[str, Any],
+        job_title: str,
+        company_name: str,
+    ) -> Dict[str, List[str]]:
+        evidence = result.get("evidence") or {}
+        scores = result.get("scores") or {}
+        role = job_title or "the target role"
+        company = f" at {company_name}" if company_name else ""
 
-        if resume_data.get("name"):
-            summary_parts.append(f"Name: {resume_data['name']}")
-        if resume_data.get("email"):
-            summary_parts.append(f"Contact: {resume_data['email']}")
-        if resume_data.get("phone"):
-            summary_parts.append(f"Phone: {resume_data['phone']}")
+        strengths = list(result.get("strengths") or [])
+        weaknesses = list(result.get("weaknesses") or [])
+        suggestions = list(result.get("suggestions") or [])
+        tips = list(result.get("ats_optimization_tips") or [])
+        missing = list(result.get("missing_keywords") or evidence.get("missing_skills") or [])
+        matched = list(evidence.get("matched_skills") or [])
 
-        summary_parts.append("\nProfessional Summary:")
-        summary_parts.append(resume_data.get("summary", "Not provided"))
+        skill_gap: List[str] = []
+        if missing:
+            skill_gap.append(f"Skill gaps vs {role}{company}: {', '.join(missing[:10])}.")
+        if matched:
+            skill_gap.append(f"Already covered: {', '.join(matched[:8])}.")
+        if scores.get("skills_match") is not None:
+            skill_gap.append(f"Skills match score: {scores['skills_match']}/100 (deterministic).")
 
-        if resume_data.get("skills"):
-            summary_parts.append("\nKey Skills:")
-            summary_parts.append(", ".join(resume_data["skills"]))
+        if not skill_gap:
+            skill_gap.append("No major skill gaps extracted from the job description lexicon.")
 
-        if resume_data.get("experience"):
-            summary_parts.append("\nWork Experience:")
-            for exp in resume_data["experience"][:3]:
-                exp_text = f"- {exp.get('title', '')} at {exp.get('company', '')}"
-                if exp.get("duration"):
-                    exp_text += f" ({exp.get('duration')})"
-                summary_parts.append(exp_text)
+        recommendations = list(suggestions)
+        if evidence.get("required_years") is not None:
+            recommendations.append(
+                f"JD asks for ~{evidence['required_years']}+ years; resume parsed ~{evidence.get('resume_years', 0)} years."
+            )
+        if (evidence.get("quantified_bullets") or 0) < 2:
+            recommendations.append(
+                "Add at least two bullets with measurable outcomes (%, $, scale)."
+            )
+        if not recommendations:
+            recommendations.append(f"Continue aligning Experience bullets to {role}{company}.")
 
-        if resume_data.get("education"):
-            summary_parts.append("\nEducation:")
-            for edu in resume_data["education"]:
-                edu_text = f"- {edu.get('degree', '')}"
-                if edu.get("institution"):
-                    edu_text += f" from {edu['institution']}"
-                if edu.get("year"):
-                    edu_text += f" ({edu['year']})"
-                summary_parts.append(edu_text)
-
-        return "\n".join(summary_parts)
-
-    def _parse_feedback_response(self, response_text: str) -> Dict[str, List[str]]:
-        """Parse the raw feedback text into structured sections."""
-        sections = {
-            "strengths": [],
-            "areas_for_improvement": [],
-            "ats_optimization": [],
-            "skill_gap_analysis": [],
-            "actionable_recommendations": [],
+        return {
+            "strengths": strengths[:6],
+            "areas_for_improvement": weaknesses[:6],
+            "ats_optimization": tips[:6],
+            "skill_gap_analysis": skill_gap[:6],
+            "actionable_recommendations": recommendations[:6],
         }
 
-        current_section = None
-        section_map = {
-            "strengths": "strengths",
-            "areas for improvement": "areas_for_improvement",
-            "ats optimization": "ats_optimization",
-            "skill gap analysis": "skill_gap_analysis",
-            "actionable recommendations": "actionable_recommendations",
-        }
+    async def _optional_llm_rewrite(
+        self,
+        feedback: Dict[str, List[str]],
+        ats_result: Dict[str, Any],
+        job_title: str,
+        company_name: str,
+    ) -> tuple[Optional[Dict[str, List[str]]], Optional[str]]:
+        """
+        Ask Groq to rephrase locked facts. On any failure, return (None, None)
+        so the caller keeps deterministic feedback.
+        """
+        try:
+            from groq import AsyncGroq
 
-        for line in response_text.split("\n"):
-            line = line.strip()
+            client = AsyncGroq(api_key=settings.GROQ_API_KEY)
+            facts = {
+                "overall_score": ats_result.get("overall_score"),
+                "scores": ats_result.get("scores"),
+                "matched_skills": (ats_result.get("evidence") or {}).get("matched_skills"),
+                "missing_skills": ats_result.get("missing_keywords"),
+                "feedback_draft": feedback,
+                "job_title": job_title,
+                "company_name": company_name,
+            }
+            prompt = (
+                "You are a career coach. Rewrite the feedback bullets to be clearer and more "
+                "actionable. You MUST NOT invent new scores, skills, or metrics. Only rephrase "
+                "using the provided facts. Return ONLY JSON with keys: strengths, "
+                "areas_for_improvement, ats_optimization, skill_gap_analysis, "
+                "actionable_recommendations — each a list of strings.\n\n"
+                f"FACTS:\n{json.dumps(facts, indent=2)}"
+            )
 
-            # Check for section headers (flexible matching)
-            line_lower = line.lower()
-            for keyword, section_key in section_map.items():
-                if keyword in line_lower and ("**" in line or "#" in line):
-                    current_section = section_key
-                    break
+            response = await client.chat.completions.create(
+                model=settings.GROQ_MODEL,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.3,
+                max_tokens=2048,
+            )
+            try:
+                from backend.telemetry import record_llm_usage
+                record_llm_usage(getattr(response, "usage", None))
+            except Exception:
+                pass
+            raw = response.choices[0].message.content or ""
+            polished = self._parse_json_feedback(raw)
+            if not polished:
+                return None, raw
+            # Ensure all keys exist; fall back per-section
+            merged = dict(feedback)
+            for key in feedback.keys():
+                vals = polished.get(key)
+                if isinstance(vals, list) and vals:
+                    merged[key] = [str(v) for v in vals][:8]
+            return merged, raw
+        except Exception as e:
+            logger.warning("Optional feedback rewrite skipped: %s", e)
+            return None, None
 
-            # Add content to current section
-            if current_section and line and not any(kw in line.lower() for kw in section_map):
-                if line.startswith(("-", "•", "*", "–")) or (len(line) > 2 and line[0].isdigit() and line[1] in ".):"):
-                    clean = line.lstrip("-•*–0123456789.). ").strip()
-                    if clean:
-                        sections[current_section].append(clean)
-                elif line and not line.startswith(("#", "**")):
-                    sections[current_section].append(line)
+    @staticmethod
+    def _parse_json_feedback(response_text: str) -> Optional[Dict[str, Any]]:
+        raw = (response_text or "").strip()
+        if not raw:
+            return None
+        if "```json" in raw:
+            raw = raw.split("```json", 1)[1].split("```", 1)[0].strip()
+        elif "```" in raw:
+            raw = raw.split("```", 1)[1].split("```", 1)[0].strip()
+        start, end = raw.find("{"), raw.rfind("}")
+        if start == -1 or end == -1:
+            return None
+        try:
+            data = json.loads(raw[start : end + 1])
+            return data if isinstance(data, dict) else None
+        except json.JSONDecodeError:
+            return None
 
-        return sections
 
-
-# -------------------------------------------------------------------
-# Lazy singleton
-# -------------------------------------------------------------------
 _feedback_generator: Optional[FeedbackGenerator] = None
 
 

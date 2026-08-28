@@ -1,15 +1,27 @@
-import time
-from typing import Dict, Any
+"""
+Live application telemetry — request latency, request counts, and real LLM token usage.
 
-# Global state for telemetry
-# In a real production system with multiple workers, this would be backed by Redis or similar.
+Token counts are incremented only from provider usage objects (e.g. Groq),
+never by fake per-route constants.
+"""
+
+from __future__ import annotations
+
+import time
+from typing import Any, Dict, Optional
+
+
 class TelemetryState:
     def __init__(self):
         self.start_time = time.time()
-        self.total_tokens = 14200  # Start with a base mock value or 0
+        self.total_tokens = 0
         self.last_latency_ms = 0.0
+        self.request_count = 0
+        self.llm_calls = 0
+
 
 global_telemetry = TelemetryState()
+
 
 def get_telemetry_data() -> Dict[str, Any]:
     uptime_seconds = time.time() - global_telemetry.start_time
@@ -20,13 +32,31 @@ def get_telemetry_data() -> Dict[str, Any]:
 
     return {
         "api_latency_ms": int(global_telemetry.last_latency_ms),
-        "total_tokens": global_telemetry.total_tokens,
+        "total_tokens": int(global_telemetry.total_tokens),
         "uptime": uptime_str,
-        "status": "Active" if global_telemetry.last_latency_ms < 500 else "Degraded"
+        "status": "Active" if global_telemetry.last_latency_ms < 5000 else "Degraded",
+        "request_count": int(global_telemetry.request_count),
+        "llm_calls": int(global_telemetry.llm_calls),
     }
 
+
 def record_api_call(latency_ms: float, is_llm: bool = False):
+    """Record HTTP latency. Does not fabricate token counts."""
     global_telemetry.last_latency_ms = latency_ms
-    if is_llm:
-        # Increment tokens by a simulated amount if it's an LLM heavy route
-        global_telemetry.total_tokens += 125
+    global_telemetry.request_count += 1
+
+
+def record_llm_usage(usage: Any = None, total_tokens: Optional[int] = None) -> None:
+    """Accumulate real token usage from an LLM provider response."""
+    tokens = 0
+    if total_tokens is not None:
+        tokens = int(total_tokens)
+    elif usage is not None:
+        tokens = int(getattr(usage, "total_tokens", None) or 0)
+        if tokens <= 0:
+            prompt = int(getattr(usage, "prompt_tokens", None) or 0)
+            completion = int(getattr(usage, "completion_tokens", None) or 0)
+            tokens = prompt + completion
+    if tokens > 0:
+        global_telemetry.total_tokens += tokens
+    global_telemetry.llm_calls += 1

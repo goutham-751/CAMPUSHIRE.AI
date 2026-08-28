@@ -1,6 +1,8 @@
 .ambientField {
   position: relative;
   min-height: 100vh;
+  width: 100%;
+  flex: 1;
   background: radial-gradient(circle at 50% 50%, var(--color-obsidian) 0%, var(--color-black) 100%);
   overflow: hidden;
 }
@@ -47,6 +49,7 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  width: 100%;
 }
 
 @keyframes orbDrift {

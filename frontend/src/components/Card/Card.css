@@ -1,6 +1,7 @@
 .card {
     border-radius: var(--radius-lg);
     transition: all var(--transition-base);
+    width: 100%;
 }
 
 .card--padded {

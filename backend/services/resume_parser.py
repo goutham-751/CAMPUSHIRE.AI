@@ -1,15 +1,26 @@
+"""
+Deterministic resume parser.
 
-import os
-import json
+Extracts structured fields from PDF/DOCX/TXT using heuristics and a skill
+lexicon — no LLM calls. Output shape matches the existing API contract.
+"""
+
+from __future__ import annotations
+
 from pathlib import Path
-from typing import Dict, List, Optional, Any
+from typing import Any, Dict, Optional
 
-from groq import AsyncGroq
-from dotenv import load_dotenv
-
-from backend.config import settings
-
-load_dotenv()
+from backend.services.resume_extractors import (
+    extract_certifications,
+    extract_contact,
+    extract_education,
+    extract_experience,
+    extract_languages,
+    extract_name,
+    extract_projects,
+    extract_skills_section,
+    split_sections,
+)
 
 try:
     import docx
@@ -22,60 +33,10 @@ except ImportError:
     PdfReader = None
 
 
-RESUME_PARSE_PROMPT = """
-You are an expert resume parser. Extract structured information from this resume document.
-
-Return ONLY valid JSON (no markdown, no explanation) with this exact structure:
-{
-  "name": "Full name of the candidate",
-  "email": "email address",
-  "phone": "phone number",
-  "linkedin": "LinkedIn URL if present",
-  "github": "GitHub URL if present",
-  "summary": "Professional summary or objective (first 500 chars)",
-  "skills": ["skill1", "skill2", "skill3"],
-  "experience": [
-    {
-      "company": "Company name",
-      "title": "Job title",
-      "duration": "e.g. Jan 2020 - Present",
-      "description": ["bullet point 1", "bullet point 2"]
-    }
-  ],
-  "education": [
-    {
-      "institution": "School/University name",
-      "degree": "Degree type",
-      "field_of_study": "Field if applicable",
-      "year": "Graduation year"
-    }
-  ],
-  "projects": [
-    {
-      "title": "Project name",
-      "description": ["description or key points"]
-    }
-  ],
-  "certifications": ["certification 1", "certification 2"],
-  "languages": ["Language 1", "Language 2"]
-}
-
-Extract all available information. Use empty arrays [] or empty strings "" for missing fields.
-"""
-
-
 class ResumeParser:
-    """Parses resume files using Groq API for structured output."""
-
-    def __init__(self):
-        self.api_key = settings.GROQ_API_KEY
-        if not self.api_key:
-            raise ValueError("GROQ_API_KEY environment variable not set")
-        self.client = AsyncGroq(api_key=self.api_key)
-        self.model_name = settings.GROQ_MODEL
+    """Parses resume files into structured data without external AI."""
 
     async def parse_resume(self, file_path: str) -> Dict[str, Any]:
-        """Parse a resume file using Groq API and return structured data."""
         path = Path(file_path)
         if not path.exists():
             raise FileNotFoundError(f"File not found: {path}")
@@ -84,116 +45,75 @@ class ResumeParser:
         if ext not in (".pdf", ".docx", ".txt"):
             raise ValueError(f"Unsupported format: {ext}. Use .pdf, .docx, or .txt")
 
-        try:
-            text = self._extract_text(path, ext)
-            if not text.strip():
-                raise ValueError("Document is empty or could not extract text")
-            return await self._parse_text_with_groq(text)
-        except Exception as e:
-            raise Exception(f"Error parsing resume: {str(e)}")
+        text = self._extract_text(path, ext)
+        if not text.strip():
+            raise ValueError("Document is empty or could not extract text")
+        return self.parse_text(text)
+
+    def parse_text(self, text: str) -> Dict[str, Any]:
+        """Deterministic structured parse from raw resume text."""
+        sections = split_sections(text)
+        header = sections.get("header", text[:1500])
+        contact = extract_contact(header + "\n" + text[:2000])
+
+        experience, years_experience = extract_experience(sections.get("experience", ""))
+        education = extract_education(sections.get("education", ""))
+        skills = extract_skills_section(sections.get("skills", ""), text)
+        projects = extract_projects(sections.get("projects", ""))
+        certifications = extract_certifications(sections.get("certifications", ""))
+        languages = extract_languages(sections.get("languages", ""))
+        summary = sections.get("summary", "")
+        if summary and len(summary) > 500:
+            summary = summary[:500]
+
+        name = extract_name(header, contact.get("email", ""))
+
+        data: Dict[str, Any] = {
+            "name": name,
+            "email": contact.get("email", ""),
+            "phone": contact.get("phone", ""),
+            "linkedin": contact.get("linkedin", ""),
+            "github": contact.get("github", ""),
+            "summary": summary,
+            "skills": skills,
+            "experience": experience,
+            "education": education,
+            "projects": projects,
+            "certifications": certifications,
+            "languages": languages,
+            "years_experience": years_experience,
+            "sections_found": sorted(k for k in sections.keys() if k != "header"),
+            "raw_text": text[:8000],
+        }
+        return data
 
     def _extract_text(self, path: Path, ext: str) -> str:
-        """Extract raw text from a file based on its extension."""
         if ext == ".pdf":
             return self._extract_pdf_text(path)
-        elif ext == ".docx":
+        if ext == ".docx":
             return self._extract_docx_text(path)
-        else:
-            return self._extract_txt_text(path)
+        return self._extract_txt_text(path)
 
     def _extract_pdf_text(self, path: Path) -> str:
-        """Extract text from PDF using PyPDF2."""
         if PdfReader is None:
             raise ImportError("PyPDF2 is required for PDF files. pip install PyPDF2")
         reader = PdfReader(str(path))
         pages_text = []
         for page in reader.pages:
-            text = page.extract_text()
-            if text:
-                pages_text.append(text)
+            page_text = page.extract_text()
+            if page_text:
+                pages_text.append(page_text)
         return "\n".join(pages_text)
 
     def _extract_docx_text(self, path: Path) -> str:
-        """Extract raw text from DOCX."""
         if docx is None:
             raise ImportError("python-docx is required for DOCX files. pip install python-docx")
         doc = docx.Document(path)
         return "\n".join(p.text for p in doc.paragraphs if p.text)
 
-    def _extract_txt_text(self, path: Path) -> str:
-        """Extract raw text from TXT file."""
+    @staticmethod
+    def _extract_txt_text(path: Path) -> str:
         return path.read_text(encoding="utf-8", errors="replace")
-
-    async def _parse_text_with_groq(self, text: str) -> Dict[str, Any]:
-        """Send resume text to Groq and get structured JSON."""
-        prompt = f"""Resume content (raw text):
----
-{text[:15000]}
----
-
-{RESUME_PARSE_PROMPT}"""
-
-        response = await self.client.chat.completions.create(
-            model=self.model_name,
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.1,
-            max_tokens=4096,
-        )
-
-        response_text = response.choices[0].message.content
-        return self._parse_json_response(response_text)
-
-    def _parse_json_response(self, response_text: str) -> Dict[str, Any]:
-        """Extract and validate JSON from Groq response."""
-        if not response_text or not response_text.strip():
-            raise ValueError("No content in Groq response")
-
-        # Parse JSON - handle markdown code blocks
-        raw = response_text.strip()
-        if "```json" in raw:
-            raw = raw.split("```json")[1].split("```")[0].strip()
-        elif "```" in raw:
-            raw = raw.split("```")[1].split("```")[0].strip()
-
-        # If there's leading/trailing garbage, try to extract the first { to the last }
-        start_idx = raw.find("{")
-        end_idx = raw.rfind("}")
-        if start_idx != -1 and end_idx != -1 and end_idx >= start_idx:
-            raw = raw[start_idx:end_idx+1]
-
-        try:
-            data = json.loads(raw)
-        except json.JSONDecodeError as e:
-            import ast
-            try:
-                # Attempt to parse Python-like dict structures or trailing commas
-                data = ast.literal_eval(raw)
-            except Exception:
-                raise ValueError(f"Could not parse JSON from LLM: {str(e)}. Raw: {raw[:200]}")
-
-        # Ensure expected structure
-        defaults = {
-            "name": "",
-            "email": "",
-            "phone": "",
-            "linkedin": "",
-            "github": "",
-            "summary": "",
-            "skills": [],
-            "experience": [],
-            "education": [],
-            "projects": [],
-            "certifications": [],
-            "languages": [],
-        }
-        for k, v in defaults.items():
-            if k not in data:
-                data[k] = v
-            elif data[k] is None:
-                data[k] = v
-
-        data["raw_text"] = json.dumps(data)[:5000]  # fallback
-        return data
 
 
 _resume_parser: Optional[ResumeParser] = None
@@ -209,3 +129,8 @@ def get_resume_parser() -> ResumeParser:
 async def parse_resume(file_path: str) -> Dict[str, Any]:
     """Parse a resume file and return structured data."""
     return await get_resume_parser().parse_resume(file_path)
+
+
+def parse_resume_text(text: str) -> Dict[str, Any]:
+    """Parse resume text synchronously (for tests / scoring helpers)."""
+    return get_resume_parser().parse_text(text)
