@@ -25,7 +25,7 @@ export default function Login() {
     setError(null);
 
     if (!configured) {
-      setError('Authentication is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.');
+      setError('Authentication is not configured. Add SUPABASE_URL and SUPABASE_ANON_KEY.');
       return;
     }
 
