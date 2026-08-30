@@ -9,6 +9,7 @@ export default defineConfig(({ mode }) => {
     define: {
       'import.meta.env.SUPABASE_URL': JSON.stringify(env.SUPABASE_URL ?? ''),
       'import.meta.env.SUPABASE_ANON_KEY': JSON.stringify(env.SUPABASE_ANON_KEY ?? ''),
+      'import.meta.env.API_URL': JSON.stringify(env.API_URL ?? ''),
     },
   }
 })
